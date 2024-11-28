@@ -18,6 +18,10 @@ class PrinterRepo(ABC):
     def get_printers(self) -> list[Printer]:
         raise NotImplementedError()
 
+    @abstractmethod
+    def get_printer_by_id(self, printer_id: int) -> Printer | None:
+        raise NotImplementedError()
+
 class LogRepo(ABC):
     @abstractmethod
     def get_logs(self) -> list[Log]:

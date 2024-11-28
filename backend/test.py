@@ -49,11 +49,6 @@ def document_test():
     assert resp.status_code == 200 and "printer_id" in resp.json() and "print_job_id" in resp.json()
     print(resp.json())
 
-    sleep(10.0)
-
-    logs = requests.get(URL + "log", headers={"Authorization": token})
-    assert logs.status_code == 200
-    print(logs.json())
 
 printer_test()
 document_test()

@@ -13,8 +13,13 @@ app = FastAPI()
 auth = Auth()
 db = init_db()
 
+
 def log_callback(printer: Printer, print_job: PrintJob):
-    assert printer.id is not None and print_job.id is not None and print_job.student_id is not None
+    assert (
+        printer.id is not None
+        and print_job.id is not None
+        and print_job.student_id is not None
+    )
     log = Log(
         printer_id=printer.id,
         print_job_id=print_job.id,
@@ -58,7 +63,6 @@ async def authorize(request: Request, call_next):
     if user_id is None:
         return Response(status_code=401, content="Unauthorized")
     request.state.user = user_id
-    print(f"User {user_id} is authorized")
     response = await call_next(request)
     return response
 
@@ -101,12 +105,17 @@ async def update_printer(request: Request, printer: Printer):
     return {"id": printer.id}
 
 
-@app.delete("/printer/delete/{id}")
-async def delete_printer(request: Request, id: int):
+@app.delete("/printer/delete/{printer_id}")
+async def delete_printer(request: Request, printer_id: int):
     if auth.role(request.state.user) != "spso":
         raise HTTPException(status_code=403, detail="Forbidden")
-    db.delete_printer(id)
-    return {"id": id}
+    printer = db.get_printer_by_id(printer_id)
+    if printer is None:
+        raise HTTPException(status_code=404, detail="Printer not found")
+    if printer.status == Status.ENABLED:
+        raise HTTPException(status_code=400, detail="Printer is enabled. Please disable it first")
+    db.delete_printer(printer_id)
+    return {"id": printer_id}
 
 
 @app.post("/printer/print")
@@ -208,6 +217,7 @@ async def upload_file(request: Request):
             raise HTTPException(status_code=400, detail="Invalid file type")
 
     return document
+
 
 @app.get("/log")
 async def get_logs(request: Request):

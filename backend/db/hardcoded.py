@@ -84,6 +84,11 @@ class HardCodedDB(Repo):
     def get_printers(self):
         return self.printers
 
+    def get_printer_by_id(self, printer_id: int) -> Printer | None:
+        return next(
+            filter(lambda printer: printer.id == printer_id, self.printers)
+        )
+
     def add_printer(self, printer: Printer):
         next_id = 1 if len(self.printers) == 0 else self.printers[-1].id + 1
         printer.id = next_id
