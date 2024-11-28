@@ -225,6 +225,24 @@ async def upload_file(request: Request):
 
     return document
 
+@app.get("/student")
+async def get_student(request: Request):
+    if auth.role(request.state.user) != "student":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    student_id = request.state.user
+    student = db.get_student_by_id(student_id)
+    assert student is not None
+    return student
+
+@app.get("/student/{student_id}")
+async def get_student_by_id(request: Request, student_id: int):
+    if auth.role(request.state.user) != "spso":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    student = db.get_student_by_id(student_id)
+    if student is None:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return student
+
 @app.get("/system")
 async def get_system_config():
     return db.get_system_config()
