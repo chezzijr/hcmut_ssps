@@ -16,4 +16,4 @@ class PrintJob(BaseModel):
     copies: int
     page_size: PageSize
     double_sided: bool
-    student_id: int
+    student_id: Optional[int] = None
