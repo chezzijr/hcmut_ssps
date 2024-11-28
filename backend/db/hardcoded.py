@@ -147,7 +147,7 @@ class HardCodedDB(Repo):
     def get_system_config(self):
         return self.system_config
 
-    def edit_system_config(self, system_config: SystemConfig):
+    def update_system_config(self, system_config: SystemConfig):
         self.system_config = system_config
 
 

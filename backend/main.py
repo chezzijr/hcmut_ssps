@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from auth import Auth, LoginBody
 from db import init_db
-from models import Printer, PrintJob, Document, Log, Status
+from models import Printer, PrintJob, Document, Log, Status, SystemConfig
 from threading import Thread
 import docx
 import io
@@ -225,6 +225,16 @@ async def upload_file(request: Request):
 
     return document
 
+@app.get("/system")
+async def get_system_config():
+    return db.get_system_config()
+
+@app.post("/system/update")
+async def update_system_config(request: Request, config: SystemConfig):
+    if auth.role(request.state.user) != "spso":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    db.update_system_config(config)
+    return config
 
 @app.get("/log")
 async def get_logs(request: Request):

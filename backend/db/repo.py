@@ -52,5 +52,5 @@ class Repo(PrinterRepo, LogRepo, FileRepo, UserRepo):
         raise NotImplementedError()
 
     @abstractmethod
-    def edit_system_config(self, system_config: SystemConfig):
+    def update_system_config(self, system_config: SystemConfig):
         raise NotImplementedError()
