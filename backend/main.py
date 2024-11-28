@@ -165,6 +165,8 @@ async def get_printjobs(request: Request):
 async def upload_file(request: Request):
     if auth.role(request.state.user) != "student":
         raise HTTPException(status_code=403, detail="Forbidden")
+    student = db.get_student_by_id(request.state.user)
+    assert student is not None
     form = await request.form()
     file = form.get("file")
     if file is None:
@@ -185,12 +187,15 @@ async def upload_file(request: Request):
     match ext:
         # case docx and doc
         case "docx", "doc":
-            file_id = db.upload_file(file_bytes, ext)
             try:
                 doc = docx.Document(io.BytesIO(file_bytes))
-            except Exception as e:
+            except Exception:
                 raise HTTPException(status_code=400, detail="Invalid DOCX file")
             page_cnt = sum(p.contains_page_break for p in doc.paragraphs) + 1
+            if student.remaining_pages < page_cnt:
+                raise HTTPException(status_code=400, detail="Insufficient pages")
+
+            file_id = db.upload_file(file_bytes, ext)
             document = Document(
                 file_id=file_id,
                 file_name=true_name,
@@ -199,12 +204,14 @@ async def upload_file(request: Request):
             )
             db.add_document(document)
         case "pdf":
-            file_id = db.upload_file(file_bytes, ext)
             try:
                 pdf = PyPDF2.PdfReader(io.BytesIO(file_bytes))
             except Exception as e:
                 raise HTTPException(status_code=400, detail="Invalid PDF file")
             page_cnt = len(pdf.pages)
+            if student.remaining_pages < page_cnt:
+                raise HTTPException(status_code=400, detail="Insufficient pages")
+            file_id = db.upload_file(file_bytes, ext)
             document = Document(
                 file_id=file_id,
                 file_name=true_name,

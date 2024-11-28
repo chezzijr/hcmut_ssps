@@ -139,8 +139,16 @@ class HardCodedDB(Repo):
             f.write(file_bytes)
         return file_id
 
+    def get_student_by_id(self, student_id: int) -> Student | None:
+        return next(
+            filter(lambda student: student.id == student_id, self.students)
+        )
+
     def get_system_config(self):
         return self.system_config
+
+    def edit_system_config(self, system_config: SystemConfig):
+        self.system_config = system_config
 
 
 def init_db() -> Repo:

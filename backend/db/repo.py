@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from models import Printer, Log, PrintJob, Document, SystemConfig
+from models import Printer, Log, PrintJob, Document, SystemConfig, Student
 
 class PrinterRepo(ABC):
     @abstractmethod
@@ -40,7 +40,17 @@ class FileRepo(ABC):
     def upload_file(self, file_bytes: bytes, ext: str) -> int:
         raise NotImplementedError()
 
-class Repo(PrinterRepo, LogRepo, FileRepo):
+class UserRepo(ABC):
+    @abstractmethod
+    def get_student_by_id(self, student_id: int) -> Student | None:
+        raise NotImplementedError()
+
+
+class Repo(PrinterRepo, LogRepo, FileRepo, UserRepo):
     @abstractmethod
     def get_system_config(self) -> SystemConfig:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def edit_system_config(self, system_config: SystemConfig):
         raise NotImplementedError()
