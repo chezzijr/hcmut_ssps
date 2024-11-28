@@ -1,5 +1,5 @@
 from .repo import Repo
-from threading import RLock
+from threading import Lock
 from models import (
     Log,
     Student,
@@ -7,6 +7,7 @@ from models import (
     Printer,
     SystemConfig,
     Status,
+    Document,
 )
 
 
@@ -74,10 +75,11 @@ class HardCodedDB(Repo):
         ]
         self.system_config: SystemConfig = SystemConfig(
             default_num_pages_per_sem=20,
-            allowed_file_types=["pdf", "docx", "doc", "ppt", "pptx"],
+            allowed_file_types=["pdf", "docx", "doc"],
         )
 
-        self.lock = RLock()
+        self.documents: list[Document] = []
+        self.lock = Lock()
 
     def get_printers(self):
         return self.printers
@@ -107,6 +109,24 @@ class HardCodedDB(Repo):
         log.id = next_id
         self.logs.append(log)
         self.lock.release()
+
+    def add_document(self, document: Document):
+        self.documents.append(document)
+
+    def upload_file(self, file_bytes: bytes, ext: str) -> int:
+        """
+        returns the id of the uploaded document
+        """
+        FILE_PATH = "files"
+        file_id = 1 if len(self.documents) == 0 else self.documents[-1].file_id + 1
+
+        with open(f"{FILE_PATH}/{file_id}.{ext}", "wb") as f:
+            f.write(file_bytes)
+        return file_id
+
+    def get_system_config(self):
+        return self.system_config
+
 
 def init_db() -> Repo:
     return HardCodedDB()
