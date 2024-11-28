@@ -3,7 +3,7 @@ from models import Printer, Log, PrintJob, Document, SystemConfig
 
 class PrinterRepo(ABC):
     @abstractmethod
-    def add_printer(self, printer):
+    def add_printer(self, printer: Printer) -> Printer:
         raise NotImplementedError()
 
     @abstractmethod
@@ -11,7 +11,7 @@ class PrinterRepo(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def update_printer(self, printer):
+    def update_printer(self, printer: Printer) -> Printer:
         raise NotImplementedError()
 
     @abstractmethod

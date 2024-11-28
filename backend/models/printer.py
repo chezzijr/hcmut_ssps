@@ -26,7 +26,6 @@ class Printer(BaseModel):
     def run(self, callback: Callable[[Printer, PrintJob], None]):
         while self.status == Status.ENABLED:
             if len(self._printing_queue) == 0:
-                sleep(1.0)
                 continue
             printjob = self._printing_queue.pop(0)
             sleep(printjob.document.pages * 0.1)

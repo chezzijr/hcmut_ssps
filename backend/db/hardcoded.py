@@ -88,16 +88,26 @@ class HardCodedDB(Repo):
         next_id = 1 if len(self.printers) == 0 else self.printers[-1].id + 1
         printer.id = next_id
         self.printers.append(printer)
+        return printer
 
     def delete_printer(self, printer_id: int):
+        deleted_printer = next(
+            filter(lambda printer: printer.id == printer_id, self.printers)
+        )
+        deleted_printer.status = Status.DISABLED
         self.printers = list(
             filter(lambda printer: printer.id != printer_id, self.printers)
         )
 
     def update_printer(self, printer: Printer):
-        self.printers = list(
-            map(lambda p: printer if p.id == printer.id else p, self.printers)
+        updated_printer = next(
+            filter(lambda p: p.id == printer.id, self.printers)
         )
+        updated_printer.brand = printer.brand
+        updated_printer.model = printer.model
+        updated_printer.description = printer.description
+        updated_printer.status = printer.status
+        return printer
 
     def get_logs(self):
         return self.logs

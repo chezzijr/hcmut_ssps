@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from auth import Auth, LoginBody
 from db import init_db
-from models import Printer, PrintJob, Document, Log
+from models import Printer, PrintJob, Document, Log, Status
 from threading import Thread
 import docx
 import io
@@ -86,6 +86,8 @@ async def add_printer(request: Request, printer: Printer):
     next_printer_id = printers[-1].id + 1
     printer.id = next_printer_id
     db.add_printer(printer)
+    if printer.status == Status.ENABLED:
+        Thread(target=printer.run, args=(log_callback,)).start()
     return {"id": printer.id}
 
 
@@ -95,7 +97,7 @@ async def update_printer(request: Request, printer: Printer):
         raise HTTPException(status_code=403, detail="Forbidden")
     if printer.id is None:
         raise HTTPException(status_code=400, detail="Printer ID is required")
-    db.update_printer(printer)
+    printer = db.update_printer(printer)
     return {"id": printer.id}
 
 
