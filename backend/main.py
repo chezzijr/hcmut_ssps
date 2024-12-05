@@ -53,7 +53,7 @@ app.add_middleware(
 
 @app.middleware("http")
 async def authorize(request: Request, call_next):
-    if request.url.path == "/login":
+    if request.url.path in ["/login", "/docs", "/openapi.json"]:
         return await call_next(request)
     token = request.headers.get("Authorization") or request.cookies.get("token")
     if token is None:
@@ -144,6 +144,31 @@ async def add_printjob(request: Request, print_job: PrintJob):
     db.add_log(log)
 
     return {"printer_id": least_busy_printer.id, "print_job_id": print_job.id}
+
+@app.post("/printer/{printer_id}/print")
+async def add_printjob_to_printer(request: Request, printer_id: int, print_job: PrintJob):
+    if auth.role(request.state.user) != "student":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    printer = db.get_printer_by_id(printer_id)
+    if printer is None:
+        raise HTTPException(status_code=404, detail="Printer not found")
+    assert printer.id is not None
+    print_job.student_id = request.state.user
+    print_job.id = (
+        int(datetime.now().timestamp() * 1000) << 32
+    ) | printer.id
+    printer.add_printjob(print_job)
+
+    log = Log(
+        description=f"[QUEUE] user={print_job.student_id} doc={print_job.document.file_name}",
+        student_id=request.state.user,
+        printer_id=printer.id,
+        print_job_id=print_job.id,
+        date=datetime.now(),
+    )
+    db.add_log(log)
+
+    return {"printer_id": printer.id, "print_job_id": print_job.id}
 
 
 @app.get("/printjob")

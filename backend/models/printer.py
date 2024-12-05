@@ -16,6 +16,7 @@ class Printer(BaseModel):
     model: str
     description: str
     status: Status
+    is_running: bool = False
     # list is thread safe because of GIL
     # so this will work for python <3.13 (hopefully)
     _printing_queue: list[PrintJob] = []
@@ -27,6 +28,8 @@ class Printer(BaseModel):
         while self.status == Status.ENABLED:
             if len(self._printing_queue) == 0:
                 continue
+            self.is_running = True
             printjob = self._printing_queue.pop(0)
             sleep(printjob.document.pages * 0.1)
+            self.is_running = False
             callback(self, printjob)
