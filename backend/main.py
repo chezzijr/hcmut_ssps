@@ -53,7 +53,7 @@ app.add_middleware(
 
 @app.middleware("http")
 async def authorize(request: Request, call_next):
-    if request.url.path == "/login":
+    if request.url.path in ["/login", "/docs", "/openapi.json"]:
         return await call_next(request)
     token = request.headers.get("Authorization") or request.cookies.get("token")
     if token is None:
