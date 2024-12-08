@@ -1,10 +1,12 @@
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from auth import Auth, LoginBody
 from db import init_db
 from models import Printer, PrintJob, Document, Log, Status, SystemConfig
 from threading import Thread
+from time import sleep
 import docx
 import io
 import PyPDF2
@@ -12,7 +14,6 @@ import PyPDF2
 app = FastAPI()
 auth = Auth()
 db = init_db()
-
 
 def log_callback(printer: Printer, print_job: PrintJob):
     assert (
@@ -36,11 +37,25 @@ for printer in db.get_printers():
     printer_thread = Thread(target=printer.run, args=(log_callback,))
     printer_thread.start()
 
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-    "http://localhost:5173",
-]
+def add_pages_each_sem():
+    time = datetime.now()
+    # first semester starts from 15th August
+    # second semester starts from 1st January
+    while True:
+        if time.month < 8 or (time.month == 8 and time.day < 15):
+            next_sem = datetime(time.year, 8, 15)
+        else:
+            next_sem = datetime(time.year + 1, 1, 1)
+        delta = next_sem - time
+
+        sleep(delta.total_seconds())
+        db.add_pages_to_students()
+        # sleep for 1 day to avoid multiple calls
+        sleep(24 * 60 * 60 + 1)
+
+Thread(target=add_pages_each_sem).start()
+
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -285,3 +300,16 @@ async def get_logs(request: Request):
     if auth.role(request.state.user) == "student":
         logs = [log for log in logs if log.student_id == request.state.user]
     return logs
+
+class BuyPagesBody(BaseModel):
+    pages: int
+@app.post("/buy_pages")
+async def buy_pages(request: Request, body: BuyPagesBody):
+    if auth.role(request.state.user) != "student":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    student_id = request.state.user
+    student = db.get_student_by_id(student_id)
+    assert student is not None
+    student.remaining_pages += body.pages
+    updated_student = db.update_student(student)
+    return updated_student
