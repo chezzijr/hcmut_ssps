@@ -75,6 +75,7 @@ class HardCodedDB(Repo):
         ]
         self.system_config: SystemConfig = SystemConfig(
             default_num_pages_per_sem=20,
+            prices_per_page=1000, # 1000 VND, also accounts for the prining cost
             allowed_file_types=["pdf", "docx", "doc"],
         )
 
@@ -150,6 +151,22 @@ class HardCodedDB(Repo):
     def update_system_config(self, system_config: SystemConfig):
         self.system_config = system_config
 
+    def add_pages_to_students(self):
+        self.lock.acquire()
+        num_pages = self.system_config.default_num_pages_per_sem
+        for student in self.students:
+            student.remaining_pages += num_pages
+        self.lock.release()
+
+    def update_student(self, student: Student) -> Student:
+        updated_student = next(
+            filter(lambda s: s.id == student.id, self.students)
+        )
+        if updated_student is None:
+            raise ValueError(f"Student with id {student.id} not found")
+        updated_student.name = student.name
+        updated_student.remaining_pages = student.remaining_pages
+        return student
 
 def init_db() -> Repo:
     return HardCodedDB()

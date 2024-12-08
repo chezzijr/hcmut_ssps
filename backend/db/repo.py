@@ -45,6 +45,9 @@ class UserRepo(ABC):
     def get_student_by_id(self, student_id: int) -> Student | None:
         raise NotImplementedError()
 
+    @abstractmethod
+    def update_student(self, student: Student) -> Student:
+        raise NotImplementedError()
 
 class Repo(PrinterRepo, LogRepo, FileRepo, UserRepo):
     @abstractmethod
@@ -53,4 +56,8 @@ class Repo(PrinterRepo, LogRepo, FileRepo, UserRepo):
 
     @abstractmethod
     def update_system_config(self, system_config: SystemConfig):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def add_pages_to_students(self):
         raise NotImplementedError()
