@@ -1,0 +1,92 @@
+.buttonLogin button {
+  background-color: #e6f3ff;
+  height: 56px;
+  width: 366px;
+  font-size: 20px;
+  border-radius: 20px;
+  border: none;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+.buttonLogin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 20px;
+}
+.UserLogin {
+  background-color: white;
+  width: 500px;
+  height: 600px;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+.titleLogin {
+  width: 366px;
+  height: 56px;
+  font-size: 28px;
+  font-weight: bold;
+  text-align: left;
+  padding-left: 67px;
+  margin-bottom: 30px;
+}
+
+.UserLogin hr {
+  align-items: right;
+  display: flex;
+  width: 366px;
+  color: black;
+  border: 1px solid #000;
+  margin-top: 30px;
+}
+.LoginFrame {
+  width: 1000px;
+  height: 600px;
+  /* background-image: url("./loginBackground.jpg"); */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(25px);
+  justify-content: right;
+  display: flex;
+  border-radius: 20px;
+}
+.Login {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+.Login::before {
+  content: "";
+  background-image: url("./loginBackground1.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+.buttonLogin button:hover {
+  background-color: #87c6ff;
+  text-decoration: underline;
+  transform: scale(1.02);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+.LoginContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 500px;
+  padding: 30px;
+  gap: 10px;
+}
+.LoginContent .line2 {
+  font-size: 18px;
+  font-weight: normal;
+  flex-direction: column;
+  display: flex;
+  gap: 7px;
+}
