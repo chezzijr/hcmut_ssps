@@ -1,5 +1,4 @@
 import "./UserHome.css";
-import { FaFileAlt, FaPrint } from "react-icons/fa";
 import Header from "../header/Header";
 import React, { useState } from "react";
 import { Card } from "primereact/card";
@@ -25,15 +24,6 @@ const UserHome = () => {
       </div>
 
       <div className="userHomeContent">
-        {/* <div className="dashBoard">
-          <div className="card-content">
-            <h3>Số trang còn lại</h3>
-            <h1>100</h1>
-          </div>
-          <div className="card-icon">
-            <FaFileAlt />
-          </div>
-        </div> */}
         <Card className="dashBoard">
           <div className="card-content">
             <h3>Số trang còn lại</h3>
@@ -41,7 +31,11 @@ const UserHome = () => {
           </div>
           {showRemainingPages && (
             <ScrollPanel
-              style={{ height: "100%", marginTop: "1rem", width: "100%" }}
+              style={{
+                height: "100%",
+                marginTop: "1rem",
+                width: "100%",
+              }}
             >
               <ul className="paper-list">
                 {paperTypes.map((paper, index) => (
@@ -65,16 +59,6 @@ const UserHome = () => {
             />
           </div>
         </Card>
-
-        {/* <div className="dashBoard">
-          <div className="card-content">
-            <h3>Đã in gần đây</h3>
-            <h1>10</h1>
-          </div>
-          <div className="card-icon">
-            <FaPrint />
-          </div>
-        </div> */}
         <Card className="dashBoard">
           <div className="card-content">
             <h3>Đã in gần đây</h3>

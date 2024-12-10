@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import logo from "./logoBK.png";
 import "./AdminLogin.css";
 import { InputText } from "primereact/inputtext";
 import { useNavigate } from "react-router-dom";
 
 interface AdminLoginProps {
-  setUserType: (type: "Admin" | "SPSO" | "User") => void;
+  setUserType: (type: "Admin" | "SPSO" | "User" | " ") => void;
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ setUserType }) => {

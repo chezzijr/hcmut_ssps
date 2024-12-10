@@ -92,11 +92,18 @@ const SPSO_Dashboard = () => {
   };
 
   return (
-    <div className="spso-dashboard" style={{ padding: "20px" }}>
+    <div
+      className="spso-dashboard"
+      style={{
+        padding: "20px",
+        width: "100%",
+        height: "100vh",
+        boxSizing: "border-box",
+      }}
+    >
       {/* Card Header */}
       <Card
         style={{
-          
           width: "100%",
           maxWidth: "1200px",
           borderRadius: "12px",
@@ -129,7 +136,7 @@ const SPSO_Dashboard = () => {
           <div
             style={{
               width: "48%", // Chiếm 48% chiều rộng của Card
-              height: "300px", // Đặt chiều cao cho mỗi biểu đồ
+              height: "auto", // Đặt chiều cao cho mỗi biểu đồ
               marginBottom: "1rem",
             }}
           >
@@ -145,7 +152,7 @@ const SPSO_Dashboard = () => {
           <div
             style={{
               width: "48%", // Chiếm 48% chiều rộng của Card
-              height: "300px", // Đặt chiều cao cho mỗi biểu đồ
+              height: "auto", // Đặt chiều cao cho mỗi biểu đồ
               marginBottom: "1rem",
             }}
           >

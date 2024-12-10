@@ -75,7 +75,6 @@
   transition: all 0.3s ease;
   border-radius: 40%;
   display: flex;
-  left: 50%;
 }
 
 /* Hover hiệu ứng */
@@ -90,4 +89,12 @@
   background-color: #003d80;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
   transform: scale(0.98);
+}
+.toggle-button {
+  position: absolute; /* Thêm thuộc tính này để giữ nút cố định */
+  bottom: 10px; /* Điều chỉnh vị trí theo ý muốn */
+  right: 10px; /* Điều chỉnh vị trí theo ý muốn */
+}
+.card-content {
+  position: relative; /* Thêm thuộc tính này để cha của nút có vị trí tương đối */
 }

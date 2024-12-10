@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import logo from "./logoBK.png";
 import "./Login.css";
 import { useNavigate } from "react-router-dom";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();

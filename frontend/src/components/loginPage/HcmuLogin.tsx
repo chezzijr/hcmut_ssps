@@ -6,7 +6,7 @@ interface DemoAccount {
   password: string;
 }
 interface HcmutLoginLoginProps {
-  setUserType: (type: "Admin" | "SPSO" | "User") => void;
+  setUserType: (type: "Admin" | "SPSO" | "User" | " ") => void;
 }
 
 const HcmutLogin: React.FC<HcmutLoginLoginProps> = ({ setUserType }) => {
@@ -22,28 +22,6 @@ const HcmutLogin: React.FC<HcmutLoginLoginProps> = ({ setUserType }) => {
 
   const navigate = useNavigate();
 
-  /* const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log(username, password);
-    fetch("http://localhost:8000/login", {
-      method: "POST",
-      headers: { "Content-type": "application/json" },
-      body: JSON.stringify({ 'login': username, 'password': password
-      }),
-    })
-      .then(async (response) => {
-        if (response.ok) {
-          data = await response.json();
-          role = data.role;
-          console.log(data);
-        } else {
-          // toast
-        }
-      })
-      .catch((error) => {
-        // toast
-      });
-  }; */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const matchingAccount = demoAccounts.find(

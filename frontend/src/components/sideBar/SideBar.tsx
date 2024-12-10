@@ -10,23 +10,29 @@ import {
   FaPhone,
   FaInfoCircle,
 } from "react-icons/fa";
-// import "./Sidebar.css";
+
+import { useNavigate } from "react-router-dom";
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
+
   return (
     <div className="sidebar">
       <div className=" titleSidebar">SPSS</div>
       <div className="menuSidebar">
-        <button>
+        <button onClick={() => handleNavigation("./home")}>
           <FaHome /> Trang chủ
         </button>
-        <button>
+        <button onClick={() => handleNavigation("./user-printing")}>
           <FaPrint /> In tài liệu
         </button>
         <button>
           <FaHistory /> Lịch sử in
         </button>
-        <button>
+        <button onClick={() => handleNavigation("./user-buying")}>
           <FaCartPlus /> Mua trang in
         </button>
         <button>

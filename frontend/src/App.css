@@ -25,7 +25,7 @@
 /* Đảm bảo chiều cao toàn trang */
 html,
 body {
-  height: 100%;
+  height: 100vh;
   margin: 0;
   font-family: "Arial", sans-serif; /* Cải thiện font chữ cho toàn bộ ứng dụng */
 }
@@ -33,98 +33,20 @@ body {
 /* Wrapper chính */
 .layout-wrapper {
   display: flex;
-  width: 100%;
   height: 100vh;
   background-color: #f7f9fc;
 }
-
-/* Sidebar */
-.sidebar {
-  width: 20%;
-  background-color: #007bff;
-  color: white;
-  padding: 20px;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  height: 100%;
-  position: relative;
-}
-
-.sidebar h2 {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-  font-weight: bold; /* Đậm font chữ */
-}
-
-/* Card chứa thông tin người dùng */
-.user-info-card {
-  margin-bottom: 30px;
-  padding: 20px;
-  background-color: #006bb3;
-  border-radius: 10px;
-}
-
-/* Thông tin người dùng */
-.user-info {
-  text-align: center;
-  color: white;
-}
-
-.user-info img {
-  border-radius: 50%;
-  width: 100px;
-  height: 100px;
-  margin-bottom: 10px;
-}
-
-.user-info p {
-  margin: 5px 0;
-  font-weight: bold; /* Đậm font chữ */
-}
-
-/* Menu trong Sidebar */
-.sidebar-menu {
-  list-style: none;
-  padding: 0;
-}
-
-.sidebar-menu li {
-  padding: 10px 0;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.sidebar-menu li a {
-  text-decoration: none; /* Bỏ gạch chân */
-  color: #f6f1f1; /* Màu chữ mặc định */
+.layout-wrapper .spsoMainSideBar {
   display: flex;
-  align-items: center;
-  padding: 10px 15px;
-  transition: color 0.3s ease, background-color 0.3s ease; /* Hiệu ứng chuyển màu */
-  font-weight: bold; /* Đậm font chữ */
 }
-
-.sidebar-menu li:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  padding-left: 10px;
-  transition: all 0.3s ease;
-}
-
-.sidebar-menu li a i {
-  margin-right: 10px; /* Khoảng cách giữa icon và văn bản */
-}
-
 /* Content */
-.content1 {
-  flex: 1;
+.layout-wrapper .spsoMainContent {
+  display: flex;
+  width: 75%;
   padding: 20px;
-  height: 100%;
-  
-  background-color: #f1f1f1;
-  /* Điều chỉnh để phần content chiếm 80% chiều rộng còn lại */
-  max-width: 80%;
-  margin: 0 auto; /* Căn giữa phần content */
+  height: 100vh;
+  overflow-y: auto;
 }
-
 
 .user {
   display: flex;

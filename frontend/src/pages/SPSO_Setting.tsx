@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Card } from "primereact/card";
+import { Dropdown } from "primereact/dropdown";
 import { InputNumber } from "primereact/inputnumber";
 import { MultiSelect } from "primereact/multiselect";
 import { Button } from "primereact/button";
@@ -8,9 +9,15 @@ import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 
 const SPSO_Setting: React.FC = () => {
-  const [selectedPageCount, setSelectedPageCount] = useState(1);
+  const [selectedPrinter, setSelectedPrinter] = useState(null);
+  const [selectedPageCount, setSelectedPageCount] = useState<number>(1);
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
-  const [pricePerPage, setPricePerPage] = useState<number>(0);
+
+  const printers = [
+    { name: "Máy in 1", code: "printer1" },
+    { name: "Máy in 2", code: "printer2" },
+    { name: "Máy in 3", code: "printer3" },
+  ];
 
   const formats = [
     { label: ".docx", value: "docx" },
@@ -21,11 +28,19 @@ const SPSO_Setting: React.FC = () => {
   ];
 
   return (
-    <div className="spso-setting" style={{ padding: "20px", textAlign: "left"}}>
+    <div
+      className="p-d-flex p-jc-center p-ai-center"
+      style={{
+        height: "100vh",
+        width: "100%",
+        margin: "0", // Loại bỏ margin
+        padding: "20px", // Loại bỏ padding
+        boxSizing: "border-box",
+      }}
+    >
       {/* Header Card */}
       <Card
         style={{
-          backgroundColor: "#fff",
           width: "100%",
           maxWidth: "1200px", // Giới hạn chiều rộng tối đa để không bị quá rộng
           borderRadius: "12px",
@@ -46,6 +61,35 @@ const SPSO_Setting: React.FC = () => {
           backgroundColor: "#fff",
         }}
       >
+        {/* Máy in */}
+        <div className="p-mb-4">
+          <div
+            className="p-d-flex p-jc-between p-ai-center"
+            style={{ marginBottom: "1rem" }}
+          >
+            <label
+              htmlFor="printer"
+              style={{
+                fontWeight: "bold",
+                marginRight: "10px",
+                flexShrink: 0,
+              }}
+            >
+              Máy in
+            </label>
+            <Dropdown
+              id="printer"
+              value={selectedPrinter}
+              options={printers}
+              onChange={(e) => setSelectedPrinter(e.value)}
+              optionLabel="name"
+              placeholder="Chọn máy in"
+              className="p-d-block"
+              style={{ width: "20%" }}
+            />
+          </div>
+        </div>
+
         {/* Số trang in mặc định */}
         <div className="p-mb-4">
           <div
@@ -65,7 +109,7 @@ const SPSO_Setting: React.FC = () => {
             <InputNumber
               id="pageCount"
               value={selectedPageCount}
-              onValueChange={(e) => setSelectedPageCount(e.value)}
+              onValueChange={(e) => setSelectedPageCount(e.value || 1)}
               min={1}
               max={1000}
               className="p-d-block"
@@ -99,33 +143,6 @@ const SPSO_Setting: React.FC = () => {
               placeholder="Chọn định dạng file"
               className="p-d-block"
               display="chip"
-              style={{ width: "20%" }}
-            />
-          </div>
-        </div>
-
-        {/* Giá mỗi trang in */}
-        <div className="p-mb-4">
-          <div
-            className="p-d-flex p-jc-between p-ai-center"
-            style={{ marginBottom: "1rem" }}
-          >
-            <label
-              htmlFor="pricePerPage"
-              style={{
-                fontWeight: "bold",
-                marginRight: "10px",
-                flexShrink: 0,
-              }}
-            >
-              Giá mỗi trang in (VND)
-            </label>
-            <InputNumber
-              id="pricePerPage"
-              value={pricePerPage}
-              onValueChange={(e) => setPricePerPage(e.value)}
-              min={0}
-              className="p-d-block"
               style={{ width: "20%" }}
             />
           </div>

@@ -44,7 +44,15 @@ const SPSO_History = () => {
   );
 
   return (
-    <div className="spso-history" style={{ padding: "20px" }}>
+    <div
+      className="spso-history"
+      style={{
+        padding: "20px",
+        width: "100%",
+        height: "100vh",
+        boxSizing: "border-box",
+      }}
+    >
       {/* Card cho Header */}
       <Card
         style={{
