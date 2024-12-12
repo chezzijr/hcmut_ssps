@@ -116,8 +116,11 @@ async def update_printer(request: Request, printer: Printer):
         raise HTTPException(status_code=403, detail="Forbidden")
     if printer.id is None:
         raise HTTPException(status_code=400, detail="Printer ID is required")
-    printer = db.update_printer(printer)
-    return {"id": printer.id}
+    try:
+        p = db.update_printer(printer)
+        return {"id": p.id}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.delete("/printer/delete/{printer_id}")
@@ -129,8 +132,11 @@ async def delete_printer(request: Request, printer_id: int):
         raise HTTPException(status_code=404, detail="Printer not found")
     if printer.status == Status.ENABLED:
         raise HTTPException(status_code=400, detail="Printer is enabled. Please disable it first")
-    db.delete_printer(printer_id)
-    return {"id": printer_id}
+    try:
+        db.delete_printer(printer_id)
+        return {"id": printer_id}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/printer/print")
