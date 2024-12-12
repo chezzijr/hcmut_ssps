@@ -87,7 +87,8 @@ class HardCodedDB(Repo):
 
     def get_printer_by_id(self, printer_id: int) -> Printer | None:
         return next(
-            filter(lambda printer: printer.id == printer_id, self.printers)
+            filter(lambda printer: printer.id == printer_id, self.printers),
+            None
         )
 
     def add_printer(self, printer: Printer):
@@ -98,7 +99,8 @@ class HardCodedDB(Repo):
 
     def delete_printer(self, printer_id: int):
         deleted_printer = next(
-            filter(lambda printer: printer.id == printer_id, self.printers)
+            filter(lambda printer: printer.id == printer_id, self.printers),
+            None
         )
         deleted_printer.status = Status.DISABLED
         self.printers = list(
@@ -107,7 +109,8 @@ class HardCodedDB(Repo):
 
     def update_printer(self, printer: Printer):
         updated_printer = next(
-            filter(lambda p: p.id == printer.id, self.printers)
+            filter(lambda p: p.id == printer.id, self.printers),
+            None
         )
         updated_printer.brand = printer.brand
         updated_printer.model = printer.model
@@ -142,7 +145,8 @@ class HardCodedDB(Repo):
 
     def get_student_by_id(self, student_id: int) -> Student | None:
         return next(
-            filter(lambda student: student.id == student_id, self.students)
+            filter(lambda student: student.id == student_id, self.students),
+            None
         )
 
     def get_system_config(self):
@@ -160,7 +164,8 @@ class HardCodedDB(Repo):
 
     def update_student(self, student: Student) -> Student:
         updated_student = next(
-            filter(lambda s: s.id == student.id, self.students)
+            filter(lambda s: s.id == student.id, self.students),
+            None
         )
         if updated_student is None:
             raise ValueError(f"Student with id {student.id} not found")

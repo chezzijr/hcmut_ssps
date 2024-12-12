@@ -309,7 +309,8 @@ async def buy_pages(request: Request, body: BuyPagesBody):
         raise HTTPException(status_code=403, detail="Forbidden")
     student_id = request.state.user
     student = db.get_student_by_id(student_id)
-    assert student is not None
+    if student is None:
+        raise HTTPException(status_code=404, detail="Student not found")
     student.remaining_pages += body.pages
     updated_student = db.update_student(student)
     return updated_student
