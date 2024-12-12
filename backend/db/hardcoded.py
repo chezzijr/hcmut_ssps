@@ -49,7 +49,8 @@ class HardCodedDB(Repo):
                 brand="HP",
                 model="LaserJet Pro MFP M130fw",
                 description="",
-                status=Status.ENABLED,
+                status=Status.DISABLED,
+                is_running= False,
             ),
             Printer(
                 id=2,
@@ -57,6 +58,7 @@ class HardCodedDB(Repo):
                 model="PIXMA TR4520",
                 description="",
                 status=Status.ENABLED,
+                is_running= True,
             ),
             Printer(
                 id=3,
@@ -64,13 +66,15 @@ class HardCodedDB(Repo):
                 model="HL-L2320D",
                 description="",
                 status=Status.ENABLED,
+                is_running= False,
             ),
             Printer(
                 id=4,
                 brand="Epson",
                 model="EcoTank ET-2720",
                 description="",
-                status=Status.ENABLED,
+                status=Status.DISABLED,
+                is_running= False,
             ),
         ]
         self.system_config: SystemConfig = SystemConfig(

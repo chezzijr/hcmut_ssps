@@ -5,18 +5,17 @@ import { Column } from "primereact/column";
 import { Button } from "primereact/button"; // Import PrimeReact Button
 import { Toast } from "primereact/toast"; // Import Toast để hiển thị thông báo
 import { InputText } from "primereact/inputtext"; // Import InputText để tạo ô tìm kiếm
-import { handleGetPrinter } from "../services/spsoService";
+import { handleGetPrinter, handleUpdatePrinter, handleDeletePrinter } from "../services/spsoService";
 
 interface Printer {
   id: number;
   name: string;
-  status: string; // Trạng thái máy in: "Đang in" hoặc "Không đang in"
-  isActive: boolean; // Trạng thái hoạt động của máy in
+  is_running: string; // Trạng thái máy in: "Đang in" hoặc "Không đang in"
+  status: boolean; // Trạng thái hoạt động của máy in
 }
 
 const SPSO_Management = () => {
-  const [printers, setPrinters] = useState<Printer[]>([
-  ]);
+  const [printers, setPrinters] = useState<Printer[]>([]);
 
   useEffect(() => {
     const fetchPrinters = async () => {
@@ -31,7 +30,7 @@ const SPSO_Management = () => {
             id: item.id,
             name: "Máy in " + item.id,
             status: item.status,
-            is_running: item.is_running === true ? "Đang in" : "Không đang in"
+            is_running: item.is_running == true ? "Đang in" : "Không đang in"
           }))
 
         setPrinters(formattedData);
@@ -47,32 +46,32 @@ const SPSO_Management = () => {
   const [searchText, setSearchText] = useState<string>("");
 
   // Hàm thay đổi trạng thái hoạt động của máy in
-  const togglePrinterStatus = (printerId: number) => {
-    setPrinters((prevPrinters) =>
-      prevPrinters.map((printer) =>
-        printer.id === printerId
-          ? {
-            ...printer,
-            status:
-              printer.status === "Đang in" ? "Không đang in" : "Đang in",
-          }
-          : printer
-      )
-    );
-    toast?.current?.show({
-      severity: "success",
-      summary: "Thành công",
-      detail: "Đã thay đổi trạng thái máy in",
-      life: 3000,
-    });
-  };
+  // const togglePrinterStatus = (printerId: number) => {
+  //   setPrinters((prevPrinters) =>
+  //     prevPrinters.map((printer) =>
+  //       printer.id === printerId
+  //         ? {
+  //           ...printer,
+  //           status:
+  //             printer.status === "Đang in" ? "Không đang in" : "Đang in",
+  //         }
+  //         : printer
+  //     )
+  //   );
+  //   toast?.current?.show({
+  //     severity: "success",
+  //     summary: "Thành công",
+  //     detail: "Đã thay đổi trạng thái máy in",
+  //     life: 3000,
+  //   });
+  // };
 
   // Hàm vô hiệu hóa hoặc kích hoạt máy in
-  const togglePrinterActivation = (printerId: number) => {
+  const togglePrinterActivation = async (printerId: number) => {
     setPrinters((prevPrinters) =>
       prevPrinters.map((printer) =>
         printer.id === printerId
-          ? printer.status === "Đang in"
+          ? printer.is_running === "Đang in"
             ? // Nếu máy in đang in, không thể vô hiệu hóa
             toast?.current?.show({
               severity: "error",
@@ -80,14 +79,15 @@ const SPSO_Management = () => {
               detail: "Không thể vô hiệu hóa khi máy in đang in.",
               life: 3000,
             })
-            : { ...printer, isActive: !printer.isActive } // Vô hiệu hóa hoặc kích hoạt máy in
+            : { ...printer, status: !printer.status }
           : printer
       )
     );
+    await handleUpdatePrinter(printerId)
   };
 
   // Hàm xóa máy in
-  const deletePrinter = (printerId: number) => {
+  const deletePrinter = async (printerId: number) => {
     setPrinters((prevPrinters) =>
       prevPrinters.filter((printer) => printer.id !== printerId)
     );
@@ -97,6 +97,8 @@ const SPSO_Management = () => {
       detail: "Máy in đã được xóa",
       life: 3000,
     });
+
+    await handleDeletePrinter(printerId);
   };
 
   // Hàm lọc theo tên máy in
@@ -165,17 +167,17 @@ const SPSO_Management = () => {
             header="Tên máy in"
             sortable // Thêm thuộc tính sortable để sắp xếp theo tên máy in
           />
-          <Column field="status" header="Trạng thái" />
+          <Column field="is_running" header="Trạng thái" />
 
           <Column
             body={(rowData) => (
               <Button
-                label={rowData.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
-                icon={rowData.isActive ? "pi pi-times" : "pi pi-check"}
+                label={rowData.status ? "Vô hiệu hóa" : "Kích hoạt"}
+                icon={rowData.status ? "pi pi-times" : "pi pi-check"}
                 onClick={() => togglePrinterActivation(rowData.id)}
-                className={`p-button-${rowData.isActive ? "danger" : "success"
+                className={`p-button-${rowData.status ? "danger" : "success"
                   }`}
-                disabled={rowData.status === "Đang in"} // Vô hiệu hóa nút nếu máy in đang in
+                disabled={rowData.is_running === "Đang in"} // Vô hiệu hóa nút nếu máy in đang in
               />
             )}
             header="Vô hiệu hóa/Kích hoạt"
