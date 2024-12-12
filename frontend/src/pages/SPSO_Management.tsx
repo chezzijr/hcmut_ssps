@@ -1,10 +1,11 @@
 import { Card } from "primereact/card";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button"; // Import PrimeReact Button
 import { Toast } from "primereact/toast"; // Import Toast để hiển thị thông báo
 import { InputText } from "primereact/inputtext"; // Import InputText để tạo ô tìm kiếm
+import { handleGetPrinter } from "../services/spsoService";
 
 interface Printer {
   id: number;
@@ -15,10 +16,32 @@ interface Printer {
 
 const SPSO_Management = () => {
   const [printers, setPrinters] = useState<Printer[]>([
-    { id: 1, name: "Máy in A", status: "Không đang in", isActive: true },
-    { id: 2, name: "Máy in B", status: "Đang in", isActive: true },
-    { id: 3, name: "Máy in C", status: "Không đang in", isActive: false },
   ]);
+
+  useEffect(() => {
+    const fetchPrinters = async () => {
+      try {
+        const response = await handleGetPrinter();
+        const formattedData = ((response.data) as
+          {
+            map: any, id: number, branch: string,
+            model: string, des: string,
+            status: number, is_running: boolean
+          }).map((item: any) => ({
+            id: item.id,
+            name: "Máy in " + item.id,
+            status: item.status,
+            is_running: item.is_running === true ? "Đang in" : "Không đang in"
+          }))
+
+        setPrinters(formattedData);
+      } catch (e) {
+        console.log(`Lỗi load máy in: ${e}`);
+      }
+    };
+
+    fetchPrinters();
+  }, []);
 
   const [toast, setToast] = useState<any>(null);
   const [searchText, setSearchText] = useState<string>("");
@@ -29,10 +52,10 @@ const SPSO_Management = () => {
       prevPrinters.map((printer) =>
         printer.id === printerId
           ? {
-              ...printer,
-              status:
-                printer.status === "Đang in" ? "Không đang in" : "Đang in",
-            }
+            ...printer,
+            status:
+              printer.status === "Đang in" ? "Không đang in" : "Đang in",
+          }
           : printer
       )
     );
@@ -51,12 +74,12 @@ const SPSO_Management = () => {
         printer.id === printerId
           ? printer.status === "Đang in"
             ? // Nếu máy in đang in, không thể vô hiệu hóa
-              toast?.current?.show({
-                severity: "error",
-                summary: "Không thành công",
-                detail: "Không thể vô hiệu hóa khi máy in đang in.",
-                life: 3000,
-              })
+            toast?.current?.show({
+              severity: "error",
+              summary: "Không thành công",
+              detail: "Không thể vô hiệu hóa khi máy in đang in.",
+              life: 3000,
+            })
             : { ...printer, isActive: !printer.isActive } // Vô hiệu hóa hoặc kích hoạt máy in
           : printer
       )
@@ -135,7 +158,7 @@ const SPSO_Management = () => {
             border: "2px solid #ccc", // Đường viền cho bảng
             borderRadius: "8px", // Bo góc bảng
           }}
-          // Bật tính năng sắp xếp theo tên máy in
+        // Bật tính năng sắp xếp theo tên máy in
         >
           <Column
             field="name"
@@ -150,9 +173,8 @@ const SPSO_Management = () => {
                 label={rowData.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
                 icon={rowData.isActive ? "pi pi-times" : "pi pi-check"}
                 onClick={() => togglePrinterActivation(rowData.id)}
-                className={`p-button-${
-                  rowData.isActive ? "danger" : "success"
-                }`}
+                className={`p-button-${rowData.isActive ? "danger" : "success"
+                  }`}
                 disabled={rowData.status === "Đang in"} // Vô hiệu hóa nút nếu máy in đang in
               />
             )}
