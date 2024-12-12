@@ -1,0 +1,50 @@
+.BlueButton button {
+  height: 35px;
+  width: 128px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  background-color: #00bfff;
+  border-style: none;
+  border-radius: 20px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.BlueButton button:hover {
+  cursor: pointer;
+  animation: colorShift 0.3s ease-in-out forwards;
+}
+
+.BlueButton button:not(:hover) {
+  animation: colorShiftOut 0.3s ease-in-out forwards;
+}
+
+@keyframes colorShift {
+  0% {
+    background-color: #00bfff; /* Xanh nhạt */
+    color: white;
+  }
+  30% {
+    background-color: #1976d2; /* Xanh đậm */
+    color: white;
+  }
+  100% {
+    background-color: white; /* Trắng */
+    color: #00bfff; /* Chữ xanh nhạt */
+  }
+}
+
+@keyframes colorShiftOut {
+  0% {
+    background-color: white; /* Trắng */
+    color: #00bfff; /* Chữ xanh nhạt */
+  }
+  70% {
+    background-color: #1976d2; /* Xanh đậm */
+    color: white;
+  }
+  100% {
+    background-color: #00bfff; /* Xanh nhạt */
+    color: white;
+  }
+}

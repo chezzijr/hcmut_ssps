@@ -1,0 +1,36 @@
+.sidebar {
+  width: 22%;
+  background-color: #1e90ff;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.titleSidebar {
+  font-size: 50px;
+  font-weight: bold;
+  text-align: left;
+  padding-left: 30px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+.menuSidebar {
+  flex-direction: column;
+  gap: 30px;
+  padding-top: 30px;
+  padding-left: 40px;
+  padding-right: 40px;
+  display: flex;
+}
+.menuSidebar button {
+  all: unset;
+  font-size: 28px;
+  text-align: left;
+  transition: all 0.1s ease;
+  width: fit-content;
+}
+.menuSidebar button:hover {
+  text-decoration: underline;
+  transform: scale(1.05);
+}
