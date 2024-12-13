@@ -31,5 +31,4 @@ class Printer(BaseModel):
             self.is_running = True
             printjob = self._printing_queue.pop(0)
             sleep(printjob.document.pages * 0.1)
-            self.is_running = False
             callback(self, printjob)
