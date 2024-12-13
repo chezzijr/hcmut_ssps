@@ -5,14 +5,14 @@ import { InputText } from "primereact/inputtext";
 import { useNavigate } from "react-router-dom";
 
 interface SPSOLoginProps {
-  setUserType: (type: "Admin" | "SPSO" | "User" | " ") => void;
+  setUserType: (type: "admin" | "spso" | "student" | " ") => void;
 }
 
 const SPSOLogin: React.FC<SPSOLoginProps> = ({ setUserType }) => {
   const navigate = useNavigate();
   const handleNavigation = (path: string) => {
     if (path === "/spso") {
-      setUserType("SPSO");
+      setUserType("spso");
     }
     navigate(path);
   };

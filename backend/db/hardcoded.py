@@ -17,114 +17,23 @@ from os import makedirs
 
 class HardCodedDB(Repo):
     def __init__(self):
-        
-        self.documents: list[Document] = [
-            Document(
-                file_id=1,
-                file_name="student_report_1.pdf",
-                file_type="pdf",
-                pages=15
-            ),
-            Document(
-                file_id=2,
-                file_name="student_report_2.docx",
-                file_type="docx",
-                pages=20
-            ),
-            Document(
-                file_id=3,
-                file_name="student_report_3.pdf",
-                file_type="pdf",
-                pages=10
-            ),
-            Document(
-                file_id=4,
-                file_name="student_report_4.doc",
-                file_type="doc",
-                pages=25
-            ),
-            Document(
-                file_id=5,
-                file_name="student_report_5.pdf",
-                file_type="pdf",
-                pages=30
-            )
-        ]
-        
-        self.print_jobs: list[PrintJob] = [
-            PrintJob(id=1, document=self.documents[0], copies=2, page_size=PageSize.A4, double_sided=True, student_id=2211234),
-            PrintJob(id=2, document=self.documents[1], copies=1, page_size=PageSize.A4, double_sided=False, student_id=2211235),
-            PrintJob(id=3, document=self.documents[2], copies=1, page_size=PageSize.A4, double_sided=False, student_id=2211236),
-            PrintJob(id=4, document=self.documents[3], copies=2, page_size=PageSize.A4, double_sided=True, student_id=2211234),
-            PrintJob(id=5, document=self.documents[4], copies=1, page_size=PageSize.A4, double_sided=False, student_id=2211235),
-        ]
-
-        # Gán PrintJobs vào queue của các Printer
-        self.printers: list[Printer] = [
-            Printer(id=1, brand="HP", model="LaserJet Pro MFP M130fw", description="", status=Status.ENABLED, _printing_queue=[self.print_jobs[0]]),
-            Printer(id=2, brand="Canon", model="PIXMA TR4520", description="", status=Status.ENABLED, _printing_queue=[self.print_jobs[1]]),
-            Printer(id=3, brand="Brother", model="HL-L2320D", description="", status=Status.ENABLED, _printing_queue=[self.print_jobs[2]]),
-            Printer(id=4, brand="Epson", model="EcoTank ET-2720", description="", status=Status.ENABLED, _printing_queue=[self.print_jobs[3]]),
-        ]
-
-        # Sửa đổi phần logs để tham chiếu trực tiếp đối tượng PrintJob
-        self.logs: list[Log] = [
-            Log(
-                id=1,
-                description="Printed 10 pages for John Doe.",
-                student_id=2211234,
-                printer_id=1,
-                print_job=self.print_jobs[0],  # Liên kết trực tiếp tới đối tượng PrintJob
-                date=datetime(2024, 12, 12, 9, 30)
-            ),
-            Log(
-                id=2,
-                description="Printed 5 pages for Jane Doe.",
-                student_id=2211235,
-                printer_id=2,
-                print_job=self.print_jobs[1],  # Liên kết trực tiếp tới đối tượng PrintJob
-                date=datetime(2024, 12, 12, 10, 15)
-            ),
-            Log(
-                id=3,
-                description="Printed 8 pages for Alice.",
-                student_id=2211236,
-                printer_id=3,
-                print_job=self.print_jobs[2],  # Liên kết trực tiếp tới đối tượng PrintJob
-                date=datetime(2024, 12, 12, 11, 0)
-            ),
-            Log(
-                id=4,
-                description="Printed 12 pages for John Doe.",
-                student_id=2211234,
-                printer_id=4,
-                print_job=self.print_jobs[3],  # Liên kết trực tiếp tới đối tượng PrintJob
-                date=datetime(2024, 12, 12, 13, 30)
-            ),
-            Log(
-                id=5,
-                description="Printed 6 pages for Jane Doe.",
-                student_id=2211235,
-                printer_id=1,
-                print_job=self.print_jobs[4],  # Liên kết trực tiếp tới đối tượng PrintJob
-                date=datetime(2024, 12, 12, 14, 0)
-            )
-        ]
+        self.documents: list[Document] = []
+        self.logs: list[Log] = []
         self.students: list[Student] = [
             Student(
                 id=2211234,
                 name="John Doe",
-                remaining_pages=20,
+                remaining_pages=1000,
             ),
             Student(
                 id=2211235,
                 name="Jane Doe",
-                remaining_pages=15,
+                remaining_pages=500,
             ),
             Student(
                 id=2211236,
                 name="Alice",
-                remaining_pages=10,
+                remaining_pages=100,
             ),
         ]
 
@@ -179,6 +88,7 @@ class HardCodedDB(Repo):
             allowed_file_types=["pdf", "docx", "doc"],
         )
 
+        self.lock = Lock()
         
 
     def get_printers(self):

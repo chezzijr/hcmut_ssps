@@ -1,6 +1,6 @@
 import React from "react";
 import logo from "./logoBK.png";
-import "./Login.css";
+import "./login.css";
 import { useNavigate } from "react-router-dom";
 
 const Login: React.FC = () => {
@@ -41,13 +41,6 @@ const Login: React.FC = () => {
               >
                 {" "}
                 Admin{" "}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleNavigation("/spso-login")}
-              >
-                {" "}
-                SPSO{" "}
               </button>
             </div>
           </form>

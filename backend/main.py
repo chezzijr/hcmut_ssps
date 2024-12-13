@@ -10,7 +10,6 @@ from time import sleep
 import docx
 import io
 import PyPDF2
-
 app = FastAPI()
 auth = Auth()
 db = init_db()
@@ -55,7 +54,7 @@ def add_pages_each_sem():
 
 Thread(target=add_pages_each_sem).start()
 
-origins = ["*"]
+origins = ["http://localhost", "http://localhost:5173", "http://localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -66,9 +65,12 @@ app.add_middleware(
 )
 
 
-""" @app.middleware("http")
+@app.middleware("http")
 async def authorize(request: Request, call_next):
     if request.url.path in ["/login", "/docs", "/openapi.json"]:
+        return await call_next(request)
+    # if options request, return immediately
+    if request.method == "OPTIONS":
         return await call_next(request)
     token = request.headers.get("Authorization") or request.cookies.get("token")
     if token is None:
@@ -79,7 +81,7 @@ async def authorize(request: Request, call_next):
         return Response(status_code=401, content="Unauthorized")
     request.state.user = user_id
     response = await call_next(request)
-    return response """
+    return response
 
 
 @app.post("/login")
@@ -98,8 +100,8 @@ async def get_printers():
 
 @app.post("/printer/add")
 async def add_printer(request: Request, printer: Printer):
-    """ if auth.role(request.state.user) != "spso":
-        raise HTTPException(status_code=403, detail="Forbidden") """
+    if auth.role(request.state.user) != "spso":
+        raise HTTPException(status_code=403, detail="Forbidden")
     printers = db.get_printers()
     assert len(printers) > 0 and printers[-1].id is not None
     next_printer_id = printers[-1].id + 1
@@ -125,8 +127,8 @@ async def update_printer(request: Request, printer: Printer):
 
 @app.delete("/printer/delete/{printer_id}")
 async def delete_printer(request: Request, printer_id: int):
-    """ if auth.role(request.state.user) != "spso":
-        raise HTTPException(status_code=403, detail="Forbidden") """
+    if auth.role(request.state.user) != "spso":
+        raise HTTPException(status_code=403, detail="Forbidden")
     printer = db.get_printer_by_id(printer_id)
     if printer is None:
         raise HTTPException(status_code=404, detail="Printer not found")
@@ -148,12 +150,22 @@ async def add_printjob(request: Request, print_job: PrintJob):
     least_busy_printer = min(printers, key=lambda printer: len(printer._printing_queue))
     assert least_busy_printer is not None and least_busy_printer.id is not None
 
+    num_pages = print_job.document.pages * print_job.copies if not print_job.double_sided else (print_job.document.pages // 2 + 1) * print_job.copies
+    student = db.get_student_by_id(request.state.user)
+    if student is None:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if student.remaining_pages < num_pages:
+        raise HTTPException(status_code=400, detail="Insufficient pages")
+    student.remaining_pages -= num_pages
+    db.update_student(student)
+
     # 32 bit for timestamp, 32 bit for printer id
     print_job.id = (
         int(datetime.now().timestamp() * 1000) << 32
     ) | least_busy_printer.id
     least_busy_printer.add_printjob(print_job)
     print_job.student_id = request.state.user
+
 
     log = Log(
         description=f"[QUEUE] user={print_job.student_id} doc={print_job.document.file_name}",
@@ -164,16 +176,27 @@ async def add_printjob(request: Request, print_job: PrintJob):
     )
     db.add_log(log)
 
-    return {"printer_id": least_busy_printer.id, "print_job_id": print_job.id}
+    return print_job
 
 @app.post("/printer/{printer_id}/print")
 async def add_printjob_to_printer(request: Request, printer_id: int, print_job: PrintJob):
     if auth.role(request.state.user) != "student":
         raise HTTPException(status_code=403, detail="Forbidden")
+
     printer = db.get_printer_by_id(printer_id)
     if printer is None:
         raise HTTPException(status_code=404, detail="Printer not found")
     assert printer.id is not None
+
+    num_pages = print_job.document.pages * print_job.copies if not print_job.double_sided else (print_job.document.pages // 2 + 1) * print_job.copies
+    student = db.get_student_by_id(request.state.user)
+    if student is None:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if student.remaining_pages < num_pages:
+        raise HTTPException(status_code=400, detail="Insufficient pages")
+    student.remaining_pages -= num_pages
+    db.update_student(student)
+
     print_job.student_id = request.state.user
     print_job.id = (
         int(datetime.now().timestamp() * 1000) << 32
@@ -189,7 +212,7 @@ async def add_printjob_to_printer(request: Request, printer_id: int, print_job: 
     )
     db.add_log(log)
 
-    return {"printer_id": printer.id, "print_job_id": print_job.id}
+    return print_job
 
 
 @app.get("/printjob")
@@ -198,21 +221,21 @@ async def get_printjobs(request: Request):
     printjobs = [
         printjob for printer in printers for printjob in printer._printing_queue
     ]
-    """ if auth.role(request.state.user) == "student":
+    if auth.role(request.state.user) == "student":
         printjobs = [
             printjob
             for printjob in printjobs
             if printjob.student_id == request.state.user
-        ] """
+        ]
     return printjobs
 
 
 @app.post("/upload")
 async def upload_file(request: Request):
-    """ if auth.role(request.state.user) != "student":
+    if auth.role(request.state.user) != "student":
         raise HTTPException(status_code=403, detail="Forbidden")
     student = db.get_student_by_id(request.state.user)
-    assert student is not None """
+    assert student is not None
     form = await request.form()
     file = form.get("file")
     if file is None:
@@ -238,7 +261,7 @@ async def upload_file(request: Request):
             except Exception:
                 raise HTTPException(status_code=400, detail="Invalid DOCX file")
             page_cnt = sum(p.contains_page_break for p in doc.paragraphs) + 1
-            if student.remaining_pages < page_cnt:
+            if student.remaining_pages < page_cnt // 2 + 1:
                 raise HTTPException(status_code=400, detail="Insufficient pages")
 
             file_id = db.upload_file(file_bytes, ext)
@@ -255,7 +278,7 @@ async def upload_file(request: Request):
             except Exception as e:
                 raise HTTPException(status_code=400, detail="Invalid PDF file")
             page_cnt = len(pdf.pages)
-            if student.remaining_pages < page_cnt:
+            if student.remaining_pages < page_cnt // 2 + 1:
                 raise HTTPException(status_code=400, detail="Insufficient pages")
             file_id = db.upload_file(file_bytes, ext)
             document = Document(
@@ -273,8 +296,8 @@ async def upload_file(request: Request):
 
 @app.get("/student")
 async def get_student(request: Request):
-    """ if auth.role(request.state.user) != "student":
-        raise HTTPException(status_code=403, detail="Forbidden") """
+    if auth.role(request.state.user) != "student":
+        raise HTTPException(status_code=403, detail="Forbidden")
     student_id = request.state.user
     student = db.get_student_by_id(student_id)
     assert student is not None
@@ -282,8 +305,8 @@ async def get_student(request: Request):
 
 @app.get("/student/{student_id}")
 async def get_student_by_id(request: Request, student_id: int):
-    """ if auth.role(request.state.user) != "spso":
-        raise HTTPException(status_code=403, detail="Forbidden") """
+    if auth.role(request.state.user) != "spso":
+        raise HTTPException(status_code=403, detail="Forbidden")
     student = db.get_student_by_id(student_id)
     if student is None:
         raise HTTPException(status_code=404, detail="Student not found")
@@ -295,24 +318,24 @@ async def get_system_config():
 
 @app.post("/system/update")
 async def update_system_config(request: Request, config: SystemConfig):
-    """ if auth.role(request.state.user) != "spso":
-        raise HTTPException(status_code=403, detail="Forbidden") """
+    if auth.role(request.state.user) != "spso":
+        raise HTTPException(status_code=403, detail="Forbidden")
     db.update_system_config(config)
     return config
 
 @app.get("/log")
 async def get_logs(request: Request):
     logs = db.get_logs()
-    """ if auth.role(request.state.user) == "student":
-        logs = [log for log in logs if log.student_id == request.state.user] """
+    if auth.role(request.state.user) == "student":
+        logs = [log for log in logs if log.student_id == request.state.user]
     return logs
 
 class BuyPagesBody(BaseModel):
     pages: int
 @app.post("/buy_pages")
 async def buy_pages(request: Request, body: BuyPagesBody):
-    """ if auth.role(request.state.user) != "student":
-        raise HTTPException(status_code=403, detail="Forbidden") """
+    if auth.role(request.state.user) != "student":
+        raise HTTPException(status_code=403, detail="Forbidden")
     student_id = request.state.user
     student = db.get_student_by_id(student_id)
     if student is None:

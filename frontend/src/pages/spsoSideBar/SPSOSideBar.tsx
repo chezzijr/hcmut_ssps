@@ -25,11 +25,11 @@ const SPSOSideBar = () => {
             objectFit: "cover",
           }}
         />
-        <div className="user-name" style={{ color: "black", fontWeight: "bold" }}>
-          Name: SPSO 1
+        <div className="user-name" style={{ color: "black" }}>
+          SPSO name
         </div>
-        <div className="user-id" style={{ color: "black", fontWeight: "bold"  }}>
-          ID: 1
+        <div className="user-id" style={{ color: "black" }}>
+          SPSO ID
         </div>
         <Button
           label="Thoát"

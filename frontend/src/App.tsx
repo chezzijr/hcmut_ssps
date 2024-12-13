@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 
 import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Link,
-  useLocation,
+    BrowserRouter as Router,
+    Routes,
+    Route,
+    Link,
+    useLocation,
 } from "react-router-dom";
 import Dashboard from "./pages/Dashboard"; // Import trang Dashboard
 import Restore from "./pages/Restore"; // Import trang Khôi phục hệ thống
@@ -36,129 +36,245 @@ import AdminLogin from "./components/loginPage/AdminLogin";
 import SPSOLogin from "./components/loginPage/SPSOLogin";
 import SPSOSideBar from "./pages/spsoSideBar/SPSOSideBar";
 import AdminSideBar from "./pages/adminSideBar/AdminSideBar";
+import axios from "axios";
+import Printers from "./pages/Printers"
+import PrintingHistory from "./pages/PrintingHistory";
 
 function AppWrapper() {
-  return (
-    <Router>
-      <App />
-    </Router>
-  );
+    return (
+        <Router>
+            <App />
+        </Router>
+    );
 }
 
 function App() {
-  const [state, setState] = useState({
-    user: null,
-    isLoggedIn: false,
-  })
+    const [userType, setUserType] = useState<"admin" | "spso" | "student" | " ">(
+        " "
+    );
 
-  function loginSuccess(data: any) {
-    console.log(data);
-    setState({
-      user: data,
-      isLoggedIn: true,
-    });
-  }
+    const location = useLocation();
 
-  const getState = () => {
-    return state;
-  }
-  const [userType, setUserType] = useState<"Admin" | "SPSO" | "User" | " ">(
-    " "
-  );
-  const location = useLocation();
+    useEffect(() => {
+        if (location.pathname === "/login" || location.pathname === "/") {
+            setUserType(" ");
+        }
+    }, [location.pathname]);
 
-  useEffect(() => {
-    if (location.pathname === "/") {
-      setUserType(" ");
-    }
-  }, [location.pathname]);
-
-  return (
-    <div className="App">
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <>
-              <div className="top">
-                <AHeader />
-                <Body />
-              </div>
-              <Service />
-              <Footer />
-            </>
-          }
-        />
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/hcmut-login"
-          element={<HcmutLogin setUserType={setUserType} />}
-        />
-        <Route
-          path="/admin-login"
-          element={<AdminLogin setUserType={setUserType} />}
-        />
-        <Route
-          path="/spso-login"
-          element={<SPSOLogin setUserType={setUserType} />}
-        />
-      </Routes>
-      {userType === "Admin" && <AdminRoutes />}
-      {userType === "SPSO" && <SPSORoutes />}
-      {userType === "User" && <UserRoutes />}
-    </div>
-  );
+    return (
+        <div className="App">
+            <Routes>
+                <Route
+                    path="/"
+                    element={
+                        <>
+                            <div className="top">
+                                <AHeader />
+                                <Body />
+                            </div>
+                            <Service />
+                            <Footer />
+                        </>
+                    }
+                />
+                <Route path="/login" element={<Login />} />
+                <Route
+                    path="/hcmut-login"
+                    element={<HcmutLogin setUserType={setUserType} />}
+                />
+                <Route
+                    path="/admin-login"
+                    element={<AdminLogin setUserType={setUserType} />}
+                />
+                <Route
+                    path="/spso-login"
+                    element={<SPSOLogin setUserType={setUserType} />}
+                />
+            </Routes>
+            {userType === "admin" && <AdminRoutes />}
+            {userType === "spso" && <SPSORoutes />}
+            {userType === "student" && <UserRoutes />}
+        </div>
+    );
 }
+
 const AdminRoutes: React.FC = () => (
-  <>
-    <div className="layout-wrapper">
-      {/* Sidebar: Hiển thị duy nhất 1 lần */}
-      <AdminSideBar />
-      {/* Main Content */}
-      <div className="mainContent">
-        <Routes>
-          <Route path="/admin" element={<Dashboard />} />
-          <Route path="/admin-restore" element={<Restore />} />
-          <Route path="/admin-monitor" element={<Monitor />} />
-          <Route path="/admin-access" element={<Access />} />
-          <Route path="/admin-maintenance" element={<Maintenance />} />
-        </Routes>
-      </div>
-    </div>
-  </>
+    <>
+        <div className="layout-wrapper">
+            {/* Sidebar: Hiển thị duy nhất 1 lần */}
+            <AdminSideBar />
+            {/* Main Content */}
+            <div className="mainContent">
+                <Routes>
+                    <Route path="/admin" element={<Dashboard />} />
+                    <Route path="/admin-restore" element={<Restore />} />
+                    <Route path="/admin-monitor" element={<Monitor />} />
+                    <Route path="/admin-access" element={<Access />} />
+                    <Route path="/admin-maintenance" element={<Maintenance />} />
+                </Routes>
+            </div>
+        </div>
+    </>
 );
 
 const SPSORoutes: React.FC = () => (
-  <>
-    <div className="layout-wrapper">
-      {/* Sidebar SPSO */}
-      <SPSOSideBar />
-      {/* Main Content SPSO */}
-      <div className="spsoMainContent">
-        <Routes>
-          <Route path="/spso" element={<SPSO_Dashboard />} />
-          <Route path="/spso-management" element={<SPSO_Management />} />
-          <Route path="/spso-setting" element={<SPSO_Setting />} />
-          <Route path="/spso-history" element={<SPSO_History />} />
-        </Routes>
-      </div>
-    </div>
-  </>
+    <>
+        <div className="layout-wrapper">
+            {/* Sidebar SPSO */}
+            <SPSOSideBar />
+            {/* Main Content SPSO */}
+            <div className="spsoMainContent">
+                <Routes>
+                    <Route path="/spso" element={<SPSO_Dashboard />} />
+                    <Route path="/spso-management" element={<SPSO_Management />} />
+                    <Route path="/spso-setting" element={<SPSO_Setting />} />
+                    <Route path="/spso-history" element={<SPSO_History />} />
+                </Routes>
+            </div>
+        </div>
+    </>
 );
 
 const UserRoutes: React.FC = () => (
-  <>
-    <div className="user">
-      <Sidebar />
-      <div className="userContent">
-        <Routes>
-          <Route path="/home" element={<UserHome />} />
-          <Route path="/user-printing" element={<UserPrinting />} />
-          <Route path="/user-buying" element={<UserBuy />} />
-        </Routes>
-      </div>
-    </div>
-  </>
+    <>
+        <div className="user">
+            <Sidebar />
+            <div className="userContent">
+                <Routes>
+                    <Route path="/home" element={<UserHome />} />
+                    <Route path="/user-printing" element={<UserPrinting />} />
+                    <Route path="/user-buying" element={<UserBuy />} />
+                    <Route path="/printers" element={<Printers />} />
+                    <Route path="/printing-history" element={<PrintingHistory />} />
+                </Routes>
+            </div>
+        </div>
+    </>
+// =======
+
+// function AppWrapper() {
+//   return (
+//     <Router>
+//       <App />
+//     </Router>
+//   );
+// }
+
+// function App() {
+//   const [state, setState] = useState({
+//     user: null,
+//     isLoggedIn: false,
+//   })
+
+//   function loginSuccess(data: any) {
+//     console.log(data);
+//     setState({
+//       user: data,
+//       isLoggedIn: true,
+//     });
+//   }
+
+//   const getState = () => {
+//     return state;
+//   }
+//   const [userType, setUserType] = useState<"Admin" | "SPSO" | "User" | " ">(
+//     " "
+//   );
+//   const location = useLocation();
+
+//   useEffect(() => {
+//     if (location.pathname === "/") {
+//       setUserType(" ");
+//     }
+//   }, [location.pathname]);
+
+//   return (
+//     <div className="App">
+//       <Routes>
+//         <Route
+//           path="/"
+//           element={
+//             <>
+//               <div className="top">
+//                 <AHeader />
+//                 <Body />
+//               </div>
+//               <Service />
+//               <Footer />
+//             </>
+//           }
+//         />
+//         <Route path="/login" element={<Login />} />
+//         <Route
+//           path="/hcmut-login"
+//           element={<HcmutLogin setUserType={setUserType} />}
+//         />
+//         <Route
+//           path="/admin-login"
+//           element={<AdminLogin setUserType={setUserType} />}
+//         />
+//         <Route
+//           path="/spso-login"
+//           element={<SPSOLogin setUserType={setUserType} />}
+//         />
+//       </Routes>
+//       {userType === "Admin" && <AdminRoutes />}
+//       {userType === "SPSO" && <SPSORoutes />}
+//       {userType === "User" && <UserRoutes />}
+//     </div>
+//   );
+// }
+// const AdminRoutes: React.FC = () => (
+//   <>
+//     <div className="layout-wrapper">
+//       {/* Sidebar: Hiển thị duy nhất 1 lần */}
+//       <AdminSideBar />
+//       {/* Main Content */}
+//       <div className="mainContent">
+//         <Routes>
+//           <Route path="/admin" element={<Dashboard />} />
+//           <Route path="/admin-restore" element={<Restore />} />
+//           <Route path="/admin-monitor" element={<Monitor />} />
+//           <Route path="/admin-access" element={<Access />} />
+//           <Route path="/admin-maintenance" element={<Maintenance />} />
+//         </Routes>
+//       </div>
+//     </div>
+//   </>
+// );
+
+// const SPSORoutes: React.FC = () => (
+//   <>
+//     <div className="layout-wrapper">
+//       {/* Sidebar SPSO */}
+//       <SPSOSideBar />
+//       {/* Main Content SPSO */}
+//       <div className="spsoMainContent">
+//         <Routes>
+//           <Route path="/spso" element={<SPSO_Dashboard />} />
+//           <Route path="/spso-management" element={<SPSO_Management />} />
+//           <Route path="/spso-setting" element={<SPSO_Setting />} />
+//           <Route path="/spso-history" element={<SPSO_History />} />
+//         </Routes>
+//       </div>
+//     </div>
+//   </>
+// );
+
+// const UserRoutes: React.FC = () => (
+//   <>
+//     <div className="user">
+//       <Sidebar />
+//       <div className="userContent">
+//         <Routes>
+//           <Route path="/home" element={<UserHome />} />
+//           <Route path="/user-printing" element={<UserPrinting />} />
+//           <Route path="/user-buying" element={<UserBuy />} />
+//         </Routes>
+//       </div>
+//     </div>
+//   </>
+// >>>>>>> main
 );
 
 export default AppWrapper;

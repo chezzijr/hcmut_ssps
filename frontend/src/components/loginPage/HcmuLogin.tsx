@@ -1,50 +1,45 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { login } from "../../../services/api";
 
-interface DemoAccount {
-  username: string;
-  password: string;
-}
-interface HcmutLoginLoginProps {
-  setUserType: (type: "Admin" | "SPSO" | "User" | " ") => void;
+interface UserLoginProps {
+  setUserType: (type: "admin" | "spso" | "student" | " ") => void;
 }
 
-const HcmutLogin: React.FC<HcmutLoginLoginProps> = ({ setUserType }) => {
+const HcmutLogin: React.FC<UserLoginProps> = ({ setUserType }) => {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [rememberMe, setRememberMe] = useState<boolean>(false);
-
-  const demoAccounts: DemoAccount[] = [
-    { username: "user1", password: "password1" },
-    { username: "user2", password: "password2" },
-    { username: "user3", password: "password3" },
-  ];
-
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const matchingAccount = demoAccounts.find(
-      (account) =>
-        account.username === username && account.password === password
-    );
-
-    if (matchingAccount) {
-      // Chuyển hướng người dùng đến trang tiếp theo
-      navigateToNextPage();
+  const handleNavigation = (role: string) => {
+    setUserType(role as "admin" | "spso" | "student" | " ");
+    if (role === "student") {
+      navigate("/home");
     } else {
-      console.log("Thông tin đăng nhập không hợp lệ");
+      navigate("/spso");
     }
   };
-  const navigateToNextPage = () => {
-    setUserType("User");
-    navigate("/home");
+  const handleLogin = async () => {
+    try {
+      const data = await login(username, password);
+      console.log("Login successful", data);
+
+      if (data?.token && data?.role) {
+        localStorage.setItem("authorization", data.token);
+        handleNavigation(data.role);
+      } else {
+        setErrorMessage("Invalid response from server.");
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || "Login failed. Please try again.");
+    }
   };
 
   return (
     <div className="login-page">
       <h1>Central Authentication Service</h1>
-      <form onSubmit={handleSubmit}>
+      <div>
         <div className="form-group">
           <label htmlFor="username">Username</label>
           <input
@@ -73,8 +68,11 @@ const HcmutLogin: React.FC<HcmutLoginLoginProps> = ({ setUserType }) => {
             Warn me before logging me into other sites
           </label>
         </div>
-        <button type="submit">Login</button>
-      </form>
+        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+        <button type="button" onClick={handleLogin}>
+          Login
+        </button>
+      </div>
     </div>
   );
 };

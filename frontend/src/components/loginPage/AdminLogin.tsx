@@ -5,14 +5,14 @@ import { InputText } from "primereact/inputtext";
 import { useNavigate } from "react-router-dom";
 
 interface AdminLoginProps {
-  setUserType: (type: "Admin" | "SPSO" | "User" | " ") => void;
+  setUserType: (type: "admin" | "spso" | "student" | " ") => void;
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ setUserType }) => {
   const navigate = useNavigate();
   const handleNavigation = (path: string) => {
     if (path === "/admin") {
-      setUserType("Admin");
+      setUserType("admin");
     }
     navigate(path);
   };
