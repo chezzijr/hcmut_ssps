@@ -2,104 +2,138 @@ import { Card } from "primereact/card";
 import React, { useEffect, useState } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { Button } from "primereact/button"; // Import PrimeReact Button
-import { Toast } from "primereact/toast"; // Import Toast để hiển thị thông báo
-import { InputText } from "primereact/inputtext"; // Import InputText để tạo ô tìm kiếm
-import { handleGetPrinter } from "../services/spsoService";
+import { Button } from "primereact/button";
+import { Toast } from "primereact/toast";
+import { InputText } from "primereact/inputtext";
+import { Dialog } from "primereact/dialog";
+import { InputText as PrimeInputText } from "primereact/inputtext";
+import axios from "axios";
 
 interface Printer {
   id: number;
   name: string;
-  status: string; // Trạng thái máy in: "Đang in" hoặc "Không đang in"
-  isActive: boolean; // Trạng thái hoạt động của máy in
+  is_running: string; // "Đang in" hoặc "Không đang in"
+  status: boolean; // true: Kích hoạt, false: Vô hiệu hóa
 }
 
 const SPSO_Management = () => {
-  const [printers, setPrinters] = useState<Printer[]>([
-  ]);
+  const [printers, setPrinters] = useState<Printer[]>([]);
+  const [toast, setToast] = useState<any>(null);
+  const [searchText, setSearchText] = useState<string>("");
+  const [showAddPrinterDialog, setShowAddPrinterDialog] = useState(false);
+  const [newPrinter, setNewPrinter] = useState({
+    brand: "",
+    model: "",
+    description: "",
+    status: 1,
+    is_running: false,
+  });
 
+  // Fetch printers
   useEffect(() => {
     const fetchPrinters = async () => {
       try {
-        const response = await handleGetPrinter();
-        const formattedData = ((response.data) as
-          {
-            map: any, id: number, branch: string,
-            model: string, des: string,
-            status: number, is_running: boolean
-          }).map((item: any) => ({
-            id: item.id,
-            name: "Máy in " + item.id,
-            status: item.status,
-            is_running: item.is_running === true ? "Đang in" : "Không đang in"
-          }))
-
+        const response = await axios.get("http://localhost:8000/printer");
+        const formattedData = response.data.map((item: any) => ({
+          id: item.id,
+          name: `Máy in ${item.id}`,
+          status: item.status,
+          is_running: item.is_running ? "Đang in" : "Không đang in",
+        }));
         setPrinters(formattedData);
       } catch (e) {
-        console.log(`Lỗi load máy in: ${e}`);
+        console.error("Lỗi khi tải máy in:", e);
       }
     };
 
     fetchPrinters();
   }, []);
 
-  const [toast, setToast] = useState<any>(null);
-  const [searchText, setSearchText] = useState<string>("");
+  // Toggle printer activation
+  const togglePrinterActivation = async (printerId: number) => {
+    const printerToUpdate = printers.find((printer) => printer.id === printerId);
+    if (!printerToUpdate || printerToUpdate.is_running === "Đang in") {
+      toast?.current?.show({
+        severity: "error",
+        summary: "Lỗi",
+        detail: "Không thể thay đổi trạng thái khi máy in đang in.",
+        life: 3000,
+      });
+      return;
+    }
 
-  // Hàm thay đổi trạng thái hoạt động của máy in
-  const togglePrinterStatus = (printerId: number) => {
-    setPrinters((prevPrinters) =>
-      prevPrinters.map((printer) =>
-        printer.id === printerId
-          ? {
-            ...printer,
-            status:
-              printer.status === "Đang in" ? "Không đang in" : "Đang in",
-          }
-          : printer
-      )
-    );
-    toast?.current?.show({
-      severity: "success",
-      summary: "Thành công",
-      detail: "Đã thay đổi trạng thái máy in",
-      life: 3000,
-    });
+    try {
+      await axios.post("http://localhost:8000/printer/update", {
+        id: printerId,
+        name: printerToUpdate.name,
+        status: !printerToUpdate.status,
+      });
+      setPrinters((prevPrinters) =>
+        prevPrinters.map((printer) =>
+          printer.id === printerId
+            ? { ...printer, status: !printer.status }
+            : printer
+        )
+      );
+      toast?.current?.show({
+        severity: "success",
+        summary: "Thành công",
+        detail: "Đã thay đổi trạng thái máy in.",
+        life: 3000,
+      });
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái máy in:", error);
+    }
   };
 
-  // Hàm vô hiệu hóa hoặc kích hoạt máy in
-  const togglePrinterActivation = (printerId: number) => {
-    setPrinters((prevPrinters) =>
-      prevPrinters.map((printer) =>
-        printer.id === printerId
-          ? printer.status === "Đang in"
-            ? // Nếu máy in đang in, không thể vô hiệu hóa
-            toast?.current?.show({
-              severity: "error",
-              summary: "Không thành công",
-              detail: "Không thể vô hiệu hóa khi máy in đang in.",
-              life: 3000,
-            })
-            : { ...printer, isActive: !printer.isActive } // Vô hiệu hóa hoặc kích hoạt máy in
-          : printer
-      )
-    );
+  // Delete printer
+  const deletePrinter = async (printerId: number) => {
+    try {
+      await axios.delete(`http://localhost:8000/printer/delete/${printerId}`);
+      setPrinters((prevPrinters) =>
+        prevPrinters.filter((printer) => printer.id !== printerId)
+      );
+      toast?.current?.show({
+        severity: "success",
+        summary: "Thành công",
+        detail: "Máy in đã được xóa.",
+        life: 3000,
+      });
+    } catch (error) {
+      console.error("Lỗi khi xóa máy in:", error);
+      toast?.current?.show({
+        severity: "error",
+        summary: "Lỗi",
+        detail: "Không thể xóa máy in.",
+        life: 3000,
+      });
+    }
   };
 
-  // Hàm xóa máy in
-  const deletePrinter = (printerId: number) => {
-    setPrinters((prevPrinters) =>
-      prevPrinters.filter((printer) => printer.id !== printerId)
-    );
-    toast?.current?.show({
-      severity: "error",
-      summary: "Đã xóa",
-      detail: "Máy in đã được xóa",
-      life: 3000,
-    });
+  // Add printer
+  const handleAddPrinter = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/printer/add",
+        newPrinter
+      );
+      alert("Thêm máy in thành công!");
+      setShowAddPrinterDialog(false);
+      setPrinters((prevPrinters) => [
+        ...prevPrinters,
+        {
+          id: response.data.id,
+          name: `Máy in ${response.data.id}`,
+          status: true,
+          is_running: "Không đang in",
+        },
+      ]);
+    } catch (error) {
+      console.error("Lỗi khi thêm máy in:", error);
+      alert("Thêm máy in thất bại!");
+    }
   };
 
-  // Hàm lọc theo tên máy in
   const filteredPrinters = printers.filter((printer) =>
     printer.name.toLowerCase().includes(searchText.toLowerCase())
   );
@@ -114,22 +148,20 @@ const SPSO_Management = () => {
         boxSizing: "border-box",
       }}
     >
-      {/* Card cho Header */}
       <Card
         style={{
           width: "100%",
-          maxWidth: "1200px", // Giới hạn chiều rộng tối đa
+          maxWidth: "1200px",
           borderRadius: "12px",
           marginBottom: "2rem",
           boxSizing: "border-box",
         }}
       >
-        <h3 style={{ margin: 0, textAlign: "left" }}>Cài đặt máy in</h3>
+        <h3 style={{ margin: 0, textAlign: "left", fontSize: "30px" }}>
+          Quản lý máy in
+        </h3>
       </Card>
 
-      {/* Tìm kiếm */}
-
-      {/* DataTable hiển thị máy in */}
       <Card
         style={{
           width: "100%",
@@ -140,7 +172,12 @@ const SPSO_Management = () => {
         }}
       >
         <div
-          style={{ marginBottom: "1rem", width: "100%", maxWidth: "1200px" }}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1rem",
+          }}
         >
           <InputText
             value={searchText}
@@ -148,34 +185,33 @@ const SPSO_Management = () => {
             placeholder="Nhập tên máy in..."
             style={{ width: "25%" }}
           />
+          <Button
+            label="Thêm máy in"
+            icon="pi pi-plus"
+            onClick={() => setShowAddPrinterDialog(true)}
+            className="p-button-success"
+          />
         </div>
 
         <DataTable
           value={filteredPrinters}
           responsiveLayout="scroll"
-          className="p-datatable-bordered p-datatable-striped" // Thêm lớp CSS để tạo đường viền cho bảng
+          className="p-datatable-bordered p-datatable-striped"
           style={{
-            border: "2px solid #ccc", // Đường viền cho bảng
-            borderRadius: "8px", // Bo góc bảng
+            border: "2px solid #ccc",
+            borderRadius: "8px",
           }}
-        // Bật tính năng sắp xếp theo tên máy in
         >
-          <Column
-            field="name"
-            header="Tên máy in"
-            sortable // Thêm thuộc tính sortable để sắp xếp theo tên máy in
-          />
-          <Column field="status" header="Trạng thái" />
-
+          <Column field="name" header="Tên máy in" sortable />
+          <Column field="is_running" header="Trạng thái" />
           <Column
             body={(rowData) => (
               <Button
-                label={rowData.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
-                icon={rowData.isActive ? "pi pi-times" : "pi pi-check"}
+                label={rowData.status ? "Vô hiệu hóa" : "Kích hoạt"}
+                icon={rowData.status ? "pi pi-times" : "pi pi-check"}
+                className={`p-button-${rowData.status ? "danger" : "success"}`}
                 onClick={() => togglePrinterActivation(rowData.id)}
-                className={`p-button-${rowData.isActive ? "danger" : "success"
-                  }`}
-                disabled={rowData.status === "Đang in"} // Vô hiệu hóa nút nếu máy in đang in
+                disabled={rowData.is_running === "Đang in"}
               />
             )}
             header="Vô hiệu hóa/Kích hoạt"
@@ -193,6 +229,65 @@ const SPSO_Management = () => {
           />
         </DataTable>
       </Card>
+
+      <Dialog
+        header="Thêm máy in mới"
+        visible={showAddPrinterDialog}
+        style={{ width: "50vw" }}
+        modal
+        onHide={() => setShowAddPrinterDialog(false)}
+      >
+        <div>
+          <div className="p-field">
+            <label htmlFor="brand">Thương hiệu:</label>
+            <PrimeInputText
+              id="brand"
+              value={newPrinter.brand}
+              onChange={(e) =>
+                setNewPrinter({ ...newPrinter, brand: e.target.value })
+              }
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div className="p-field">
+            <label htmlFor="model">Mẫu:</label>
+            <PrimeInputText
+              id="model"
+              value={newPrinter.model}
+              onChange={(e) =>
+                setNewPrinter({ ...newPrinter, model: e.target.value })
+              }
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div className="p-field">
+            <label htmlFor="description">Mô tả:</label>
+            <PrimeInputText
+              id="description"
+              value={newPrinter.description}
+              onChange={(e) =>
+                setNewPrinter({ ...newPrinter, description: e.target.value })
+              }
+              style={{ width: "100%" }}
+            />
+          </div>
+        </div>
+        <div style={{ textAlign: "right", marginTop: "1rem" }}>
+          <Button
+            label="Hủy"
+            icon="pi pi-times"
+            className="p-button-secondary"
+            onClick={() => setShowAddPrinterDialog(false)}
+          />
+          <Button
+            label="Thêm"
+            icon="pi pi-check"
+            className="p-button-success"
+            onClick={handleAddPrinter}
+            style={{ marginLeft: "1rem" }}
+          />
+        </div>
+      </Dialog>
     </div>
   );
 };

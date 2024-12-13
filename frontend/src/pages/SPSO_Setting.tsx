@@ -77,7 +77,7 @@ const SPSO_Setting: React.FC = () => {
           boxSizing: "border-box",
         }}
       >
-        <h3 style={{ margin: 0, textAlign: "left" }}>Cài đặt hệ thống SPSO</h3>
+        <h3 style={{ margin: 0, textAlign: "left", fontSize: "30px" }}>Cài đặt hệ thống</h3>
       </Card>
 
       {/* Settings Card */}
