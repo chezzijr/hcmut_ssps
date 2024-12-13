@@ -18,17 +18,17 @@ class HardCodedDB(Repo):
             Student(
                 id=2211234,
                 name="John Doe",
-                remaining_pages=20,
+                remaining_pages=1000,
             ),
             Student(
                 id=2211235,
                 name="Jane Doe",
-                remaining_pages=15,
+                remaining_pages=500,
             ),
             Student(
                 id=2211236,
                 name="Alice",
-                remaining_pages=10,
+                remaining_pages=100,
             ),
         ]
 

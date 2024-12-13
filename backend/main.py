@@ -55,7 +55,7 @@ def add_pages_each_sem():
 
 Thread(target=add_pages_each_sem).start()
 
-origins = ["*"]
+origins = ["http://localhost", "http://localhost:5173", "http://localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -69,6 +69,9 @@ app.add_middleware(
 @app.middleware("http")
 async def authorize(request: Request, call_next):
     if request.url.path in ["/login", "/docs", "/openapi.json"]:
+        return await call_next(request)
+    # if options request, return immediately
+    if request.method == "OPTIONS":
         return await call_next(request)
     token = request.headers.get("Authorization") or request.cookies.get("token")
     if token is None:
@@ -148,12 +151,22 @@ async def add_printjob(request: Request, print_job: PrintJob):
     least_busy_printer = min(printers, key=lambda printer: len(printer._printing_queue))
     assert least_busy_printer is not None and least_busy_printer.id is not None
 
+    num_pages = print_job.document.pages * print_job.copies if not print_job.double_sided else (print_job.document.pages // 2 + 1) * print_job.copies
+    student = db.get_student_by_id(request.state.user)
+    if student is None:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if student.remaining_pages < num_pages:
+        raise HTTPException(status_code=400, detail="Insufficient pages")
+    student.remaining_pages -= num_pages
+    db.update_student(student)
+
     # 32 bit for timestamp, 32 bit for printer id
     print_job.id = (
         int(datetime.now().timestamp() * 1000) << 32
     ) | least_busy_printer.id
     least_busy_printer.add_printjob(print_job)
     print_job.student_id = request.state.user
+
 
     log = Log(
         description=f"[QUEUE] user={print_job.student_id} doc={print_job.document.file_name}",
@@ -164,16 +177,27 @@ async def add_printjob(request: Request, print_job: PrintJob):
     )
     db.add_log(log)
 
-    return {"printer_id": least_busy_printer.id, "print_job_id": print_job.id}
+    return print_job
 
 @app.post("/printer/{printer_id}/print")
 async def add_printjob_to_printer(request: Request, printer_id: int, print_job: PrintJob):
     if auth.role(request.state.user) != "student":
         raise HTTPException(status_code=403, detail="Forbidden")
+
     printer = db.get_printer_by_id(printer_id)
     if printer is None:
         raise HTTPException(status_code=404, detail="Printer not found")
     assert printer.id is not None
+
+    num_pages = print_job.document.pages * print_job.copies if not print_job.double_sided else (print_job.document.pages // 2 + 1) * print_job.copies
+    student = db.get_student_by_id(request.state.user)
+    if student is None:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if student.remaining_pages < num_pages:
+        raise HTTPException(status_code=400, detail="Insufficient pages")
+    student.remaining_pages -= num_pages
+    db.update_student(student)
+
     print_job.student_id = request.state.user
     print_job.id = (
         int(datetime.now().timestamp() * 1000) << 32
@@ -189,7 +213,7 @@ async def add_printjob_to_printer(request: Request, printer_id: int, print_job: 
     )
     db.add_log(log)
 
-    return {"printer_id": printer.id, "print_job_id": print_job.id}
+    return print_job
 
 
 @app.get("/printjob")
@@ -238,7 +262,7 @@ async def upload_file(request: Request):
             except Exception:
                 raise HTTPException(status_code=400, detail="Invalid DOCX file")
             page_cnt = sum(p.contains_page_break for p in doc.paragraphs) + 1
-            if student.remaining_pages < page_cnt:
+            if student.remaining_pages < page_cnt // 2 + 1:
                 raise HTTPException(status_code=400, detail="Insufficient pages")
 
             file_id = db.upload_file(file_bytes, ext)
@@ -255,7 +279,7 @@ async def upload_file(request: Request):
             except Exception as e:
                 raise HTTPException(status_code=400, detail="Invalid PDF file")
             page_cnt = len(pdf.pages)
-            if student.remaining_pages < page_cnt:
+            if student.remaining_pages < page_cnt // 2 + 1:
                 raise HTTPException(status_code=400, detail="Insufficient pages")
             file_id = db.upload_file(file_bytes, ext)
             document = Document(

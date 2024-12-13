@@ -1,0 +1,89 @@
+.adminButtonLogin button {
+  background-color: #e6f3ff;
+  width: 160px;
+  font-size: 24px;
+  border-radius: 20px;
+  border: none;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  padding: 15px;
+}
+.adminButtonLogin {
+  display: flex;
+  gap: 10px;
+  padding-bottom: 20px;
+  justify-content: center;
+}
+.AdminLogin {
+  background-color: white;
+  width: 500px;
+  height: 600px;
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+}
+.adminTitleLogin {
+  font-size: 52px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.LoginFrame {
+  width: 1000px;
+  height: 600px;
+  /* background-image: url("./loginBackground.jpg"); */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(25px);
+  justify-content: right;
+  display: flex;
+  border-radius: 20px;
+}
+.Login {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+.Login::before {
+  content: "";
+  background-image: url("./loginBackground1.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+.adminButtonLogin button:hover {
+  background-color: #87c6ff;
+  text-decoration: underline;
+  transform: scale(1.02);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+.adminLoginContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 500px;
+  padding: 30px;
+  gap: 10px;
+}
+.adminLoginContent .line2 {
+  font-size: 16px;
+  font-weight: normal;
+  flex-direction: column;
+  display: flex;
+  gap: 7px;
+}
+.adminLoginContent .line1 {
+  font-size: 36px;
+}
+.p-field {
+  padding: 0px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}

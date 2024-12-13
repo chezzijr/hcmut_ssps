@@ -1,0 +1,37 @@
+.title {
+  color: #1e90ff;
+  font-size: 48px;
+  font-weight: bold;
+  padding-top: 60px;
+}
+.contents {
+  background-color: #e6f3ff;
+  width: 310px;
+  height: 260px;
+  padding: 30px;
+  box-sizing: border-box;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.smallTitle {
+  color: #1e90ff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.info {
+  font-size: 16px;
+  font-weight: normal;
+}
+.img {
+  height: 66px;
+  width: 66px;
+}
+.menuService {
+  display: flex;
+  margin-top: 60px;
+  margin-bottom: 60px;
+  justify-content: center;
+  gap: 30px;
+}
