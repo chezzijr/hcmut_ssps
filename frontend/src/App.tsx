@@ -25,7 +25,7 @@ import SPSO_History from "./pages/SPSO_History"; // Lịch sử thao tác SPSO
 import Sidebar from "./components/sideBar/SideBar";
 import UserHome from "./components/userHome/UserHome";
 import UserPrinting from "./components/userPrinting/UserPrinting";
-import UserBuy from "./components/userBuy/UserBuy";
+import UserBuying from "./components/userBuy/UserBuying";
 import Body from "./components/firstPage/Body";
 import Service from "./components/firstPage/Service";
 import Footer from "./components/firstPage/Footer";
@@ -143,7 +143,7 @@ const UserRoutes: React.FC = () => (
                 <Routes>
                     <Route path="/home" element={<UserHome />} />
                     <Route path="/user-printing" element={<UserPrinting />} />
-                    <Route path="/user-buying" element={<UserBuy />} />
+                    <Route path="/user-buying" element={<UserBuying />} />
                     <Route path="/printers" element={<Printers />} />
                     <Route path="/printing-history" element={<PrintingHistory />} />
                 </Routes>
