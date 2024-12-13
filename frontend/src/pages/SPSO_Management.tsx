@@ -1,73 +1,155 @@
-import React, { useState, useEffect } from "react";
 import { Card } from "primereact/card";
-import { InputNumber } from "primereact/inputnumber";
-import { MultiSelect } from "primereact/multiselect";
+import React, { useEffect, useState } from "react";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
 import { Button } from "primereact/button";
+import { Toast } from "primereact/toast";
+import { InputText } from "primereact/inputtext";
+import { Dialog } from "primereact/dialog";
+import { InputText as PrimeInputText } from "primereact/inputtext";
 import axios from "axios";
-import "primereact/resources/themes/lara-light-indigo/theme.css";
-import "primereact/resources/primereact.min.css";
-import "primeicons/primeicons.css";
+import { handleGetSystem, handleDeletePrinter, handleGetPrinter, handleUpdatePrinter } from "../services/spsoService";
 
-const SPSO_Setting: React.FC = () => {
-  const [pagePrice, setPagePrice] = useState<number>(0); // Giá tiền mỗi trang
-  const [selectedPageCount, setSelectedPageCount] = useState<number>(20); // Số trang mặc định
-  const [selectedFormats, setSelectedFormats] = useState<string[]>([]); // Định dạng file được phép
+interface Printer {
+  id: number;
+  name: string;
+  is_running: string; // "Đang in" hoặc "Không đang in"
+  status: boolean; // true: Kích hoạt, false: Vô hiệu hóa
+}
 
-  const formats = [
-    { label: ".docx", value: "docx" },
-    { label: ".pdf", value: "pdf" },
-    { label: ".png", value: "png" },
-    { label: ".pptx", value: "pptx" },
-    { label: ".xls", value: "xls" },
-    { label: ".txt", value: "txt" },
-    { label: ".doc", value: "doc" },
-  ];
+const SPSO_Management = () => {
+  const [printers, setPrinters] = useState<Printer[]>([]);
+  const [toast, setToast] = useState<any>(null);
+  const [searchText, setSearchText] = useState<string>("");
+  const [showAddPrinterDialog, setShowAddPrinterDialog] = useState(false);
+  const [newPrinter, setNewPrinter] = useState({
+    brand: "",
+    model: "",
+    description: "",
+    status: 1,
+    is_running: false,
+  });
 
-  // Fetch dữ liệu từ API
   useEffect(() => {
-    const fetchSettings = async () => {
+    const fetchPrinters = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/system");
-        const data = response.data;
-        setSelectedPageCount(data.default_num_pages_per_sem);
-        setPagePrice(data.prices_per_page);
-        setSelectedFormats(data.allowed_file_types);
-      } catch (error) {
-        console.error("Lỗi khi fetch dữ liệu:", error);
+        const response = await handleGetPrinter();
+        const formattedData = ((response.data) as
+          {
+            map: any, id: number, branch: string,
+            model: string, des: string,
+            status: number, is_running: boolean
+          }).map((item: any) => ({
+            id: item.id,
+            name: "Máy in " + item.id,
+            status: item.status,
+            is_running: item.is_running == true ? "Đang in" : "Không đang in"
+          }))
+
+        setPrinters(formattedData);
+      } catch (e) {
+        console.log(`Lỗi load máy in: ${e}`);
       }
     };
 
-    fetchSettings();
+    fetchPrinters();
   }, []);
 
-  // Cập nhật dữ liệu lên API
-  const handleSaveSettings = async () => {
-    const updatedData = {
-      default_num_pages_per_sem: selectedPageCount,
-      prices_per_page: pagePrice,
-      allowed_file_types: selectedFormats,
-    };
+  // Hàm thay đổi trạng thái hoạt động của máy in
+  // const togglePrinterStatus = (printerId: number) => {
+  //   setPrinters((prevPrinters) =>
+  //     prevPrinters.map((printer) =>
+  //       printer.id === printerId
+  //         ? {
+  //           ...printer,
+  //           status:
+  //             printer.status === "Đang in" ? "Không đang in" : "Đang in",
+  //         }
+  //         : printer
+  //     )
+  //   );
+  //   toast?.current?.show({
+  //     severity: "success",
+  //     summary: "Thành công",
+  //     detail: "Đã thay đổi trạng thái máy in",
+  //     life: 3000,
+  //   });
+  // };
 
+  // Hàm vô hiệu hóa hoặc kích hoạt máy in
+  const togglePrinterActivation = async (printerId: number) => {
+    setPrinters((prevPrinters) =>
+      prevPrinters.map((printer) =>
+        printer.id === printerId
+          ? printer.is_running === "Đang in"
+            ? // Nếu máy in đang in, không thể vô hiệu hóa
+            toast?.current?.show({
+              severity: "error",
+              summary: "Không thành công",
+              detail: "Không thể vô hiệu hóa khi máy in đang in.",
+              life: 3000,
+            })
+            : { ...printer, status: !printer.status }
+          : printer
+      )
+    );
+    await handleUpdatePrinter(printerId)
+  };
+
+  // Hàm xóa máy in
+  const deletePrinter = async (printerId: number) => {
+    setPrinters((prevPrinters) =>
+      prevPrinters.filter((printer) => printer.id !== printerId)
+    );
+    toast?.current?.show({
+      severity: "error",
+      summary: "Đã xóa",
+      detail: "Máy in đã được xóa",
+      life: 3000,
+    });
+
+    await handleDeletePrinter(printerId);
+  };
+
+  // Hàm lọc theo tên máy in
+  const filteredPrinters = printers.filter((printer) =>
+    printer.name.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  // Add printer
+  const handleAddPrinter = async () => {
     try {
-      await axios.post("http://localhost:8000/system/update", updatedData);
-      alert("Cập nhật cài đặt thành công!");
+      const response = await axios.post(
+        "http://localhost:8000/printer/add",
+        newPrinter
+      );
+      alert("Thêm máy in thành công!");
+      setShowAddPrinterDialog(false);
+      setPrinters((prevPrinters) => [
+        ...prevPrinters,
+        {
+          id: response.data.id,
+          name: `Máy in ${response.data.id}`,
+          status: true,
+          is_running: "Không đang in",
+        },
+      ]);
     } catch (error) {
-      console.error("Lỗi khi cập nhật dữ liệu:", error);
-      alert("Cập nhật cài đặt thất bại!");
+      console.error("Lỗi khi thêm máy in:", error);
+      alert("Thêm máy in thất bại!");
     }
   };
 
   return (
     <div
-      className="spso-setting"
+      className="spso-management"
       style={{
-        height: "100vh",
-        width: "100%",
         padding: "20px",
+        width: "100%",
+        height: "100vh",
         boxSizing: "border-box",
       }}
     >
-      {/* Header Card */}
       <Card
         style={{
           width: "100%",
@@ -77,10 +159,11 @@ const SPSO_Setting: React.FC = () => {
           boxSizing: "border-box",
         }}
       >
-        <h3 style={{ margin: 0, textAlign: "left", fontSize: "30px" }}>Cài đặt hệ thống</h3>
+        <h3 style={{ margin: 0, textAlign: "left", fontSize: "30px" }}>
+          Quản lý máy in
+        </h3>
       </Card>
 
-      {/* Settings Card */}
       <Card
         style={{
           width: "100%",
@@ -90,103 +173,125 @@ const SPSO_Setting: React.FC = () => {
           backgroundColor: "#fff",
         }}
       >
-        {/* Nhập giá tiền mỗi trang in */}
-        <div className="p-mb-4">
-          <div
-            className="p-d-flex p-jc-between p-ai-center"
-            style={{ marginBottom: "1rem" }}
-          >
-            <label
-              htmlFor="pagePrice"
-              style={{
-                fontWeight: "bold",
-                marginRight: "10px",
-                flexShrink: 0,
-              }}
-            >
-              Giá tiền mỗi trang in (VNĐ)
-            </label>
-            <InputNumber
-              id="pagePrice"
-              value={pagePrice}
-              onValueChange={(e) => setPagePrice(e.value || 0)}
-              min={0}
-              max={100000}
-              className="p-d-block"
-              style={{ width: "20%" }}
-            />
-          </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1rem",
+          }}
+        >
+          <InputText
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Nhập tên máy in..."
+            style={{ width: "25%" }}
+          />
+          <Button
+            label="Thêm máy in"
+            icon="pi pi-plus"
+            onClick={() => setShowAddPrinterDialog(true)}
+            className="p-button-success"
+          />
         </div>
 
-        {/* Số trang in mặc định */}
-        <div className="p-mb-4">
-          <div
-            className="p-d-flex p-jc-between p-ai-center"
-            style={{ marginBottom: "1rem" }}
-          >
-            <label
-              htmlFor="pageCount"
-              style={{
-                fontWeight: "bold",
-                marginRight: "10px",
-                flexShrink: 0,
-              }}
-            >
-              Số trang in mặc định
-            </label>
-            <InputNumber
-              id="pageCount"
-              value={selectedPageCount}
-              onValueChange={(e) => setSelectedPageCount(e.value || 1)}
-              min={1}
-              max={1000}
-              className="p-d-block"
-              style={{ width: "20%" }}
-            />
-          </div>
-        </div>
-
-        {/* Các định dạng file được cho phép */}
-        <div className="p-mb-4">
-          <div
-            className="p-d-flex p-jc-between p-ai-center"
-            style={{ marginBottom: "1rem" }}
-          >
-            <label
-              htmlFor="formats"
-              style={{
-                fontWeight: "bold",
-                marginRight: "10px",
-                flexShrink: 0,
-              }}
-            >
-              Các định dạng file được cho phép
-            </label>
-            <MultiSelect
-              id="formats"
-              value={selectedFormats}
-              options={formats}
-              onChange={(e) => setSelectedFormats(e.value)}
-              optionLabel="label"
-              placeholder="Chọn định dạng file"
-              className="p-d-block"
-              display="chip"
-              style={{ width: "20%" }}
-            />
-          </div>
-        </div>
-
-        {/* Save Settings Button */}
-        <Button
-          label="Lưu cài đặt"
-          icon="pi pi-save"
-          className="p-button-success p-mt-3"
-          style={{ width: "20%" }}
-          onClick={handleSaveSettings}
-        />
+        <DataTable
+          value={filteredPrinters}
+          responsiveLayout="scroll"
+          className="p-datatable-bordered p-datatable-striped"
+          style={{
+            border: "2px solid #ccc",
+            borderRadius: "8px",
+          }}
+        >
+          <Column field="name" header="Tên máy in" sortable />
+          <Column field="is_running" header="Trạng thái" />
+          <Column
+            body={(rowData) => (
+              <Button
+                label={rowData.status ? "Vô hiệu hóa" : "Kích hoạt"}
+                icon={rowData.status ? "pi pi-times" : "pi pi-check"}
+                className={`p-button-${rowData.status ? "danger" : "success"}`}
+                onClick={() => togglePrinterActivation(rowData.id)}
+                disabled={rowData.is_running === "Đang in"}
+              />
+            )}
+            header="Vô hiệu hóa/Kích hoạt"
+          />
+          <Column
+            body={(rowData) => (
+              <Button
+                label="Xóa"
+                icon="pi pi-trash"
+                onClick={() => deletePrinter(rowData.id)}
+                className="p-button-danger"
+              />
+            )}
+            header="Hành động"
+          />
+        </DataTable>
       </Card>
+
+      <Dialog
+        header="Thêm máy in mới"
+        visible={showAddPrinterDialog}
+        style={{ width: "50vw" }}
+        modal
+        onHide={() => setShowAddPrinterDialog(false)}
+      >
+        <div>
+          <div className="p-field">
+            <label htmlFor="brand">Thương hiệu:</label>
+            <PrimeInputText
+              id="brand"
+              value={newPrinter.brand}
+              onChange={(e) =>
+                setNewPrinter({ ...newPrinter, brand: e.target.value })
+              }
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div className="p-field">
+            <label htmlFor="model">Mẫu:</label>
+            <PrimeInputText
+              id="model"
+              value={newPrinter.model}
+              onChange={(e) =>
+                setNewPrinter({ ...newPrinter, model: e.target.value })
+              }
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div className="p-field">
+            <label htmlFor="description">Mô tả:</label>
+            <PrimeInputText
+              id="description"
+              value={newPrinter.description}
+              onChange={(e) =>
+                setNewPrinter({ ...newPrinter, description: e.target.value })
+              }
+              style={{ width: "100%" }}
+            />
+          </div>
+        </div>
+        <div style={{ textAlign: "right", marginTop: "1rem" }}>
+          <Button
+            label="Hủy"
+            icon="pi pi-times"
+            className="p-button-secondary"
+            onClick={() => setShowAddPrinterDialog(false)}
+          />
+          <Button
+            label="Thêm"
+            icon="pi pi-check"
+            className="p-button-success"
+            onClick={handleAddPrinter}
+            style={{ marginLeft: "1rem" }}
+          />
+        </div>
+      </Dialog>
     </div>
   );
 };
 
-export default SPSO_Setting;
+export default SPSO_Management;

@@ -1,11 +1,19 @@
 import axios from '../../axios';
 
 const handleGetPrinter = () => {
-    return axios.get("/printer");
+    return axios.get("/printer", {
+        headers: {
+            Authorization: localStorage.getItem("authorization"),
+        }
+    });
 }
 
 const handleGetSystem = () => {
-    return axios.get("/system");
+    return axios.get("/system", {
+        headers: {
+            Authorization: localStorage.getItem("authorization"),
+        }
+    });
 }
 
 const handleUpdatePrinter = (printer_id: any) => {

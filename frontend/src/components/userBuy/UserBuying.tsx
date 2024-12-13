@@ -86,11 +86,11 @@ const UserBuying: React.FC = () => {
                 <Button
                     label="Mua hàng"
                     onClick={() => {
-                        axios.post("http://localhost:8000/buy-pages", {
-                            pageCount: parseInt(pageCount),
+                        axios.post("http://localhost:8000/buy_pages", {
+                            pages: parseInt(pageCount),
                         }, {
                             headers: {
-                                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                                Authorization: localStorage.getItem("authorization"),
                             },
                         }).then((res) => {
                             alert("Mua hàng thành công");
