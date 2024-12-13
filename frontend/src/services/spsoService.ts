@@ -13,7 +13,7 @@ const handleUpdatePrinter = (printer_id: any) => {
 }
 
 const handleDeletePrinter = (printer_id: any) => {
-    return axios.post(`printer/delete/${printer_id}`);
+    return axios.delete(`printer/delete/${printer_id}`);
 }
 
 export { handleGetPrinter, handleGetSystem, handleUpdatePrinter, handleDeletePrinter };

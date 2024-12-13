@@ -111,7 +111,7 @@ const SPSO_Dashboard = () => {
           boxSizing: "border-box",
         }}
       >
-        <h3 style={{ margin: 0, textAlign: "left" }}>Trang chủ SPSO</h3>
+        <h3 style={{ margin: 0, textAlign: "left", fontSize: "30px" }}>Trang chủ</h3>
       </Card>
 
       {/* Card cho Biểu đồ Số lượng sinh viên và Số lượng file */}

@@ -23,7 +23,7 @@ def log_callback(printer: Printer, print_job: PrintJob):
     )
     log = Log(
         printer_id=printer.id,
-        print_job_id=print_job.id,
+        print_job=print_job,
         student_id=print_job.student_id,
         description=f"[END] user={print_job.student_id} doc={print_job.document.file_name}",
         date=datetime.now(),
@@ -98,8 +98,8 @@ async def get_printers():
 
 @app.post("/printer/add")
 async def add_printer(request: Request, printer: Printer):
-    if auth.role(request.state.user) != "spso":
-        raise HTTPException(status_code=403, detail="Forbidden")
+    """ if auth.role(request.state.user) != "spso":
+        raise HTTPException(status_code=403, detail="Forbidden") """
     printers = db.get_printers()
     assert len(printers) > 0 and printers[-1].id is not None
     next_printer_id = printers[-1].id + 1
@@ -112,7 +112,7 @@ async def add_printer(request: Request, printer: Printer):
 
 @app.post("/printer/update/{printer_id}")
 async def update_printer(request: Request, printer_id: int):
-    # if auth.role(request.state.user) != "spso":
+    #if auth.role(request.state.user) != "spso":
     #     raise HTTPException(status_code=403, detail="Forbidden")
     # if printer_id is None:
     #     raise HTTPException(status_code=400, detail="Printer ID is required")
@@ -124,15 +124,18 @@ async def update_printer(request: Request, printer_id: int):
 
 @app.delete("/printer/delete/{printer_id}")
 async def delete_printer(request: Request, printer_id: int):
-    if auth.role(request.state.user) != "spso":
-        raise HTTPException(status_code=403, detail="Forbidden")
+    """ if auth.role(request.state.user) != "spso":
+        raise HTTPException(status_code=403, detail="Forbidden") """
     printer = db.get_printer_by_id(printer_id)
     if printer is None:
         raise HTTPException(status_code=404, detail="Printer not found")
     if printer.status == Status.ENABLED:
         raise HTTPException(status_code=400, detail="Printer is enabled. Please disable it first")
-    db.delete_printer(printer_id)
-    return {"id": printer_id}
+    try:
+        db.delete_printer(printer_id)
+        return {"id": printer_id}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/printer/print")
@@ -155,7 +158,7 @@ async def add_printjob(request: Request, print_job: PrintJob):
         description=f"[QUEUE] user={print_job.student_id} doc={print_job.document.file_name}",
         student_id=request.state.user,
         printer_id=least_busy_printer.id,
-        print_job_id=print_job.id,
+        print_job=print_job,
         date=datetime.now(),
     )
     db.add_log(log)
@@ -180,7 +183,7 @@ async def add_printjob_to_printer(request: Request, printer_id: int, print_job: 
         description=f"[QUEUE] user={print_job.student_id} doc={print_job.document.file_name}",
         student_id=request.state.user,
         printer_id=printer.id,
-        print_job_id=print_job.id,
+        print_job=print_job,
         date=datetime.now(),
     )
     db.add_log(log)
@@ -194,21 +197,21 @@ async def get_printjobs(request: Request):
     printjobs = [
         printjob for printer in printers for printjob in printer._printing_queue
     ]
-    if auth.role(request.state.user) == "student":
+    """ if auth.role(request.state.user) == "student":
         printjobs = [
             printjob
             for printjob in printjobs
             if printjob.student_id == request.state.user
-        ]
+        ] """
     return printjobs
 
 
 @app.post("/upload")
 async def upload_file(request: Request):
-    if auth.role(request.state.user) != "student":
+    """ if auth.role(request.state.user) != "student":
         raise HTTPException(status_code=403, detail="Forbidden")
     student = db.get_student_by_id(request.state.user)
-    assert student is not None
+    assert student is not None """
     form = await request.form()
     file = form.get("file")
     if file is None:
@@ -269,8 +272,8 @@ async def upload_file(request: Request):
 
 @app.get("/student")
 async def get_student(request: Request):
-    if auth.role(request.state.user) != "student":
-        raise HTTPException(status_code=403, detail="Forbidden")
+    """ if auth.role(request.state.user) != "student":
+        raise HTTPException(status_code=403, detail="Forbidden") """
     student_id = request.state.user
     student = db.get_student_by_id(student_id)
     assert student is not None
@@ -278,8 +281,8 @@ async def get_student(request: Request):
 
 @app.get("/student/{student_id}")
 async def get_student_by_id(request: Request, student_id: int):
-    if auth.role(request.state.user) != "spso":
-        raise HTTPException(status_code=403, detail="Forbidden")
+    """ if auth.role(request.state.user) != "spso":
+        raise HTTPException(status_code=403, detail="Forbidden") """
     student = db.get_student_by_id(student_id)
     if student is None:
         raise HTTPException(status_code=404, detail="Student not found")
@@ -299,16 +302,16 @@ async def update_system_config(request: Request, config: SystemConfig):
 @app.get("/log")
 async def get_logs(request: Request):
     logs = db.get_logs()
-    if auth.role(request.state.user) == "student":
-        logs = [log for log in logs if log.student_id == request.state.user]
+    """ if auth.role(request.state.user) == "student":
+        logs = [log for log in logs if log.student_id == request.state.user] """
     return logs
 
 class BuyPagesBody(BaseModel):
     pages: int
 @app.post("/buy_pages")
 async def buy_pages(request: Request, body: BuyPagesBody):
-    if auth.role(request.state.user) != "student":
-        raise HTTPException(status_code=403, detail="Forbidden")
+    """ if auth.role(request.state.user) != "student":
+        raise HTTPException(status_code=403, detail="Forbidden") """
     student_id = request.state.user
     student = db.get_student_by_id(student_id)
     if student is None:

@@ -46,10 +46,25 @@ function AppWrapper() {
 }
 
 function App() {
+  const [state, setState] = useState({
+    user: null,
+    isLoggedIn: false,
+  })
+
+  function loginSuccess(data: any) {
+    console.log(data);
+    setState({
+      user: data,
+      isLoggedIn: true,
+    });
+  }
+
+  const getState = () => {
+    return state;
+  }
   const [userType, setUserType] = useState<"Admin" | "SPSO" | "User" | " ">(
     " "
   );
-
   const location = useLocation();
 
   useEffect(() => {
@@ -94,7 +109,6 @@ function App() {
     </div>
   );
 }
-
 const AdminRoutes: React.FC = () => (
   <>
     <div className="layout-wrapper">
