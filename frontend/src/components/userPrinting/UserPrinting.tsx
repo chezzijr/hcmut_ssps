@@ -4,7 +4,6 @@ import { Dropdown } from "primereact/dropdown";
 import { Checkbox } from "primereact/checkbox";
 import { Button } from "primereact/button";
 import Header from "../header/Header";
-import { FaUpload } from "react-icons/fa";
 import { uploadFileAPI } from "../../../services/api";
 import axios from "axios";
 
@@ -16,7 +15,6 @@ const UserPrinting: React.FC = () => {
     const [printMode, setPrintMode] = useState<number>(1);
     const [printer, setPrinter] = useState<number>(1);
     const [numCopies, setNumCopies] = useState<number>(1);
-    const [document, setDocument] = useState<any>(null);
 
     const paperSizes = [
         { label: "A5", value: 5 },
@@ -344,7 +342,7 @@ const UserPrinting: React.FC = () => {
                                     Authorization: token,
                                 },
                             });
-                            setUploadMessage(`Tải lên thành công: ${response.data.message}`);
+                            setUploadMessage(`Tải lên thành công: ${response.data.document.file_name}`)
 
                         } catch (error: any) {
                             setUploadMessage(error || "Có lỗi xảy ra khi tải lên tệp.");
