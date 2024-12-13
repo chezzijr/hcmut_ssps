@@ -23,7 +23,7 @@ def log_callback(printer: Printer, print_job: PrintJob):
     )
     log = Log(
         printer_id=printer.id,
-        print_job_id=print_job.id,
+        print_job=print_job,
         student_id=print_job.student_id,
         description=f"[END] user={print_job.student_id} doc={print_job.document.file_name}",
         date=datetime.now(),
@@ -159,7 +159,7 @@ async def add_printjob(request: Request, print_job: PrintJob):
         description=f"[QUEUE] user={print_job.student_id} doc={print_job.document.file_name}",
         student_id=request.state.user,
         printer_id=least_busy_printer.id,
-        print_job_id=print_job.id,
+        print_job=print_job,
         date=datetime.now(),
     )
     db.add_log(log)
@@ -184,7 +184,7 @@ async def add_printjob_to_printer(request: Request, printer_id: int, print_job: 
         description=f"[QUEUE] user={print_job.student_id} doc={print_job.document.file_name}",
         student_id=request.state.user,
         printer_id=printer.id,
-        print_job_id=print_job.id,
+        print_job=print_job,
         date=datetime.now(),
     )
     db.add_log(log)
