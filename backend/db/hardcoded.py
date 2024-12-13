@@ -1,5 +1,7 @@
 from .repo import Repo
 from threading import Lock
+from datetime import datetime
+
 from models import (
     Log,
     Student,
@@ -8,11 +10,14 @@ from models import (
     SystemConfig,
     Status,
     Document,
+    PrintJob,
+    PageSize,
 )
 from os import makedirs
 
 class HardCodedDB(Repo):
     def __init__(self):
+        self.documents: list[Document] = []
         self.logs: list[Log] = []
         self.students: list[Student] = [
             Student(
@@ -49,7 +54,8 @@ class HardCodedDB(Repo):
                 brand="HP",
                 model="LaserJet Pro MFP M130fw",
                 description="",
-                status=Status.ENABLED,
+                status=Status.DISABLED,
+                is_running= False,
             ),
             Printer(
                 id=2,
@@ -57,6 +63,7 @@ class HardCodedDB(Repo):
                 model="PIXMA TR4520",
                 description="",
                 status=Status.ENABLED,
+                is_running= True,
             ),
             Printer(
                 id=3,
@@ -64,13 +71,15 @@ class HardCodedDB(Repo):
                 model="HL-L2320D",
                 description="",
                 status=Status.ENABLED,
+                is_running= False,
             ),
             Printer(
                 id=4,
                 brand="Epson",
                 model="EcoTank ET-2720",
                 description="",
-                status=Status.ENABLED,
+                status=Status.DISABLED,
+                is_running= False,
             ),
         ]
         self.system_config: SystemConfig = SystemConfig(
@@ -79,8 +88,8 @@ class HardCodedDB(Repo):
             allowed_file_types=["pdf", "docx", "doc"],
         )
 
-        self.documents: list[Document] = []
         self.lock = Lock()
+        
 
     def get_printers(self):
         return self.printers

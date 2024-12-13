@@ -10,7 +10,6 @@ from time import sleep
 import docx
 import io
 import PyPDF2
-
 app = FastAPI()
 auth = Auth()
 db = init_db()

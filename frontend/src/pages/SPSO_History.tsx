@@ -1,46 +1,90 @@
 import { Card } from "primereact/card";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { Button } from "primereact/button"; // Import PrimeReact Button
-import { Toast } from "primereact/toast"; // Import Toast để hiển thị thông báo
-import { InputText } from "primereact/inputtext"; // Import InputText để tạo ô tìm kiếm
+import { Button } from "primereact/button";
+import { Toast } from "primereact/toast";
+import { Dialog } from "primereact/dialog";
+import { InputText } from "primereact/inputtext";
+import { Paginator } from "primereact/paginator";
+import axios from "axios";
 
-interface History {
+interface Document {
+  file_id: number;
+  file_name: string;
+  file_type: string;
+  pages: number;
+}
+
+interface PrintJob {
   id: number;
-  username: string;
-  time: string; // Sử dụng kiểu string cho thời gian
-  fileName: string;
+  document: Document;
+  copies: number;
+  page_size: number;
+  double_sided: boolean;
+  student_id: number;
+}
+
+interface LogEntry {
+  id: number;
+  description: string;
+  student_id: number;
+  printer_id: number;
+  print_job: PrintJob;
+  date: string;
 }
 
 const SPSO_History = () => {
-  const [history, setHistory] = useState<History[]>([
-    {
-      id: 1,
-      username: "Người dùng A",
-      time: "2024-12-01 10:30:00",
-      fileName: "File1.pdf",
-    },
-    {
-      id: 2,
-      username: "Người dùng B",
-      time: "2024-12-02 12:45:00",
-      fileName: "File2.pdf",
-    },
-    {
-      id: 3,
-      username: "Người dùng C",
-      time: "2024-12-03 15:00:00",
-      fileName: "File3.pdf",
-    },
-  ]);
-
-  const [toast, setToast] = useState<any>(null);
+  const [history, setHistory] = useState<LogEntry[]>([]);
+  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
   const [searchText, setSearchText] = useState<string>("");
+  const [first, setFirst] = useState<number>(0);
+  const [rows, setRows] = useState<number>(5);
+  const [showDialog, setShowDialog] = useState<boolean>(false);
 
-  // Hàm lọc theo tên người dùng
-  const filteredHistory = history.filter((entry) =>
-    entry.username.toLowerCase().includes(searchText.toLowerCase())
+  // Fetch dữ liệu từ API
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/log");
+        setHistory(response.data);
+      } catch (error) {
+        console.error("Lỗi khi fetch dữ liệu:", error);
+      }
+    };
+
+    fetchLogs();
+  }, []);
+
+  // Hàm lọc theo mô tả hoặc ID người dùng
+  const filteredHistory = history.filter(
+    (entry) =>
+      entry.description.toLowerCase().includes(searchText.toLowerCase()) ||
+      entry.student_id.toString().includes(searchText)
+  );
+
+  // Dữ liệu phân trang
+  const paginatedHistory = filteredHistory.slice(first, first + rows);
+
+  const handlePageChange = (e: any) => {
+    setFirst(e.first);
+    setRows(e.rows);
+  };
+
+  const handleViewDetails = (log: LogEntry) => {
+    setSelectedLog(log);
+    setShowDialog(true);
+  };
+
+  const renderDialogFooter = () => (
+    <div>
+      <Button
+        label="Đóng"
+        icon="pi pi-times"
+        onClick={() => setShowDialog(false)}
+        className="p-button-text"
+      />
+    </div>
   );
 
   return (
@@ -57,13 +101,15 @@ const SPSO_History = () => {
       <Card
         style={{
           width: "100%",
-          maxWidth: "1200px", // Giới hạn chiều rộng tối đa
+          maxWidth: "1200px",
           borderRadius: "12px",
           marginBottom: "2rem",
           boxSizing: "border-box",
         }}
       >
-        <h3 style={{ margin: 0, textAlign: "left" }}>Lịch sử hoạt động</h3>
+        <h3 style={{ margin: 0, textAlign: "left", fontSize: "30px" }}>
+          Lịch sử hoạt động
+        </h3>
       </Card>
 
       {/* DataTable hiển thị lịch sử */}
@@ -83,55 +129,87 @@ const SPSO_History = () => {
           <InputText
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Nhập tên người dùng..."
-            style={{ width: "50%" }}
+            placeholder="Nhập MSSV..."
+            style={{ width: "30%" }}
           />
         </div>
         <DataTable
-          value={filteredHistory}
+          value={paginatedHistory}
           responsiveLayout="scroll"
-          className="p-datatable-bordered p-datatable-striped" // Thêm lớp CSS để tạo đường viền cho bảng
+          className="p-datatable-gridlines p-datatable-striped"
           style={{
-            border: "2px solid #ccc", // Đường viền cho bảng
-            borderRadius: "8px", // Bo góc bảng
+            border: "2px solid #ccc",
+            borderRadius: "8px",
           }}
         >
+          <Column field="id" header="ID" sortable />
+          <Column field="description" header="Mô tả" sortable />
+          <Column field="student_id" header="MSSV" sortable />
+          <Column field="printer_id" header="ID Máy in" sortable />
           <Column
-            field="username"
-            header="Tên người dùng"
-            sortable // Thêm thuộc tính sortable để sắp xếp theo tên người dùng
+            field="print_job.id"
+            header="ID PrintJob"
+            body={(rowData) => rowData.print_job?.id}
+            sortable
           />
-          <Column
-            field="time"
-            header="Thời gian"
-            sortable // Sắp xếp theo thời gian
-          />
-          <Column
-            field="fileName"
-            header="Tên file"
-            sortable // Thêm thuộc tính sortable để sắp xếp theo tên file
-          />
-
           <Column
             body={(rowData) => (
               <Button
-                label="Xem"
+                label="Xem chi tiết"
                 icon="pi pi-eye"
-                onClick={() =>
-                  toast?.current?.show({
-                    severity: "info",
-                    summary: "Thông tin",
-                    detail: `Đang xem file: ${rowData.fileName}`,
-                    life: 3000,
-                  })
-                }
+                onClick={() => handleViewDetails(rowData)}
                 className="p-button-info"
               />
             )}
             header="Hành động"
           />
         </DataTable>
+
+        {/* Paginator */}
+        <Paginator
+          first={first}
+          rows={rows}
+          totalRecords={filteredHistory.length}
+          onPageChange={handlePageChange}
+          template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+        />
       </Card>
+
+      {/* Dialog chi tiết */}
+      <Dialog
+        header="Chi tiết PrintJob"
+        visible={showDialog}
+        style={{ width: "50vw" }}
+        footer={renderDialogFooter()}
+        onHide={() => setShowDialog(false)}
+      >
+        {selectedLog && (
+          <div>
+           
+            <p>
+              <strong>Tên File:</strong>{" "}
+              {selectedLog.print_job?.document.file_name}
+            </p>
+            <p>
+              <strong>Loại File:</strong>{" "}
+              {selectedLog.print_job?.document.file_type}
+            </p>
+            <p>
+              <strong>Số Trang:</strong> {selectedLog.print_job?.document.pages}
+            </p>
+            <p>
+              <strong>Số Bản In:</strong> {selectedLog.print_job?.copies}
+            </p>
+            <p>
+              <strong>Kích Thước Trang:</strong> {selectedLog.print_job?.page_size}
+            </p>
+            <p>
+              <strong>In Hai Mặt:</strong>{" "}
+              {selectedLog.print_job?.double_sided ? "Có" : "Không"}
+            </p>
+          </div>
+        )}
+      </Dialog>
     </div>
   );
 };

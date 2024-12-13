@@ -1,112 +1,86 @@
+import React, { useState, useEffect } from "react";
 import { Card } from "primereact/card";
-import React, { useState } from "react";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
-import { Button } from "primereact/button"; // Import PrimeReact Button
-import { Toast } from "primereact/toast"; // Import Toast để hiển thị thông báo
-import { InputText } from "primereact/inputtext"; // Import InputText để tạo ô tìm kiếm
+import { InputNumber } from "primereact/inputnumber";
+import { MultiSelect } from "primereact/multiselect";
+import { Button } from "primereact/button";
+import axios from "axios";
+import "primereact/resources/themes/lara-light-indigo/theme.css";
+import "primereact/resources/primereact.min.css";
+import "primeicons/primeicons.css";
 
-interface Printer {
-  id: number;
-  name: string;
-  status: string; // Trạng thái máy in: "Đang in" hoặc "Không đang in"
-  isActive: boolean; // Trạng thái hoạt động của máy in
-}
+const SPSO_Setting: React.FC = () => {
+  const [pagePrice, setPagePrice] = useState<number>(0); // Giá tiền mỗi trang
+  const [selectedPageCount, setSelectedPageCount] = useState<number>(20); // Số trang mặc định
+  const [selectedFormats, setSelectedFormats] = useState<string[]>([]); // Định dạng file được phép
 
-const SPSO_Management = () => {
-  const [printers, setPrinters] = useState<Printer[]>([
-    { id: 1, name: "Máy in A", status: "Không đang in", isActive: true },
-    { id: 2, name: "Máy in B", status: "Đang in", isActive: true },
-    { id: 3, name: "Máy in C", status: "Không đang in", isActive: false },
-  ]);
+  const formats = [
+    { label: ".docx", value: "docx" },
+    { label: ".pdf", value: "pdf" },
+    { label: ".png", value: "png" },
+    { label: ".pptx", value: "pptx" },
+    { label: ".xls", value: "xls" },
+    { label: ".txt", value: "txt" },
+    { label: ".doc", value: "doc" },
+  ];
 
-  const [toast, setToast] = useState<any>(null);
-  const [searchText, setSearchText] = useState<string>("");
+  // Fetch dữ liệu từ API
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/system");
+        const data = response.data;
+        setSelectedPageCount(data.default_num_pages_per_sem);
+        setPagePrice(data.prices_per_page);
+        setSelectedFormats(data.allowed_file_types);
+      } catch (error) {
+        console.error("Lỗi khi fetch dữ liệu:", error);
+      }
+    };
 
-  // Hàm thay đổi trạng thái hoạt động của máy in
-  const togglePrinterStatus = (printerId: number) => {
-    setPrinters((prevPrinters) =>
-      prevPrinters.map((printer) =>
-        printer.id === printerId
-          ? {
-              ...printer,
-              status:
-                printer.status === "Đang in" ? "Không đang in" : "Đang in",
-            }
-          : printer
-      )
-    );
-    toast?.current?.show({
-      severity: "success",
-      summary: "Thành công",
-      detail: "Đã thay đổi trạng thái máy in",
-      life: 3000,
-    });
+    fetchSettings();
+  }, []);
+
+  // Cập nhật dữ liệu lên API
+  const handleSaveSettings = async () => {
+    const updatedData = {
+      default_num_pages_per_sem: selectedPageCount,
+      prices_per_page: pagePrice,
+      allowed_file_types: selectedFormats,
+    };
+
+    try {
+      await axios.post("http://localhost:8000/system/update", updatedData);
+      alert("Cập nhật cài đặt thành công!");
+    } catch (error) {
+      console.error("Lỗi khi cập nhật dữ liệu:", error);
+      alert("Cập nhật cài đặt thất bại!");
+    }
   };
-
-  // Hàm vô hiệu hóa hoặc kích hoạt máy in
-  const togglePrinterActivation = (printerId: number) => {
-    setPrinters((prevPrinters) =>
-      prevPrinters.map((printer) =>
-        printer.id === printerId
-          ? printer.status === "Đang in"
-            ? // Nếu máy in đang in, không thể vô hiệu hóa
-              toast?.current?.show({
-                severity: "error",
-                summary: "Không thành công",
-                detail: "Không thể vô hiệu hóa khi máy in đang in.",
-                life: 3000,
-              })
-            : { ...printer, isActive: !printer.isActive } // Vô hiệu hóa hoặc kích hoạt máy in
-          : printer
-      )
-    );
-  };
-
-  // Hàm xóa máy in
-  const deletePrinter = (printerId: number) => {
-    setPrinters((prevPrinters) =>
-      prevPrinters.filter((printer) => printer.id !== printerId)
-    );
-    toast?.current?.show({
-      severity: "error",
-      summary: "Đã xóa",
-      detail: "Máy in đã được xóa",
-      life: 3000,
-    });
-  };
-
-  // Hàm lọc theo tên máy in
-  const filteredPrinters = printers.filter((printer) =>
-    printer.name.toLowerCase().includes(searchText.toLowerCase())
-  );
 
   return (
     <div
-      className="spso-management"
+      className="spso-setting"
       style={{
-        padding: "20px",
-        width: "100%",
         height: "100vh",
+        width: "100%",
+        padding: "20px",
         boxSizing: "border-box",
       }}
     >
-      {/* Card cho Header */}
+      {/* Header Card */}
       <Card
         style={{
           width: "100%",
-          maxWidth: "1200px", // Giới hạn chiều rộng tối đa
+          maxWidth: "1200px",
           borderRadius: "12px",
           marginBottom: "2rem",
           boxSizing: "border-box",
         }}
       >
-        <h3 style={{ margin: 0, textAlign: "left" }}>Cài đặt máy in</h3>
+        <h3 style={{ margin: 0, textAlign: "left", fontSize: "30px" }}>Cài đặt hệ thống</h3>
       </Card>
 
-      {/* Tìm kiếm */}
-
-      {/* DataTable hiển thị máy in */}
+      {/* Settings Card */}
       <Card
         style={{
           width: "100%",
@@ -116,63 +90,103 @@ const SPSO_Management = () => {
           backgroundColor: "#fff",
         }}
       >
-        <div
-          style={{ marginBottom: "1rem", width: "100%", maxWidth: "1200px" }}
-        >
-          <InputText
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Nhập tên máy in..."
-            style={{ width: "25%" }}
-          />
+        {/* Nhập giá tiền mỗi trang in */}
+        <div className="p-mb-4">
+          <div
+            className="p-d-flex p-jc-between p-ai-center"
+            style={{ marginBottom: "1rem" }}
+          >
+            <label
+              htmlFor="pagePrice"
+              style={{
+                fontWeight: "bold",
+                marginRight: "10px",
+                flexShrink: 0,
+              }}
+            >
+              Giá tiền mỗi trang in (VNĐ)
+            </label>
+            <InputNumber
+              id="pagePrice"
+              value={pagePrice}
+              onValueChange={(e) => setPagePrice(e.value || 0)}
+              min={0}
+              max={100000}
+              className="p-d-block"
+              style={{ width: "20%" }}
+            />
+          </div>
         </div>
 
-        <DataTable
-          value={filteredPrinters}
-          responsiveLayout="scroll"
-          className="p-datatable-bordered p-datatable-striped" // Thêm lớp CSS để tạo đường viền cho bảng
-          style={{
-            border: "2px solid #ccc", // Đường viền cho bảng
-            borderRadius: "8px", // Bo góc bảng
-          }}
-          // Bật tính năng sắp xếp theo tên máy in
-        >
-          <Column
-            field="name"
-            header="Tên máy in"
-            sortable // Thêm thuộc tính sortable để sắp xếp theo tên máy in
-          />
-          <Column field="status" header="Trạng thái" />
+        {/* Số trang in mặc định */}
+        <div className="p-mb-4">
+          <div
+            className="p-d-flex p-jc-between p-ai-center"
+            style={{ marginBottom: "1rem" }}
+          >
+            <label
+              htmlFor="pageCount"
+              style={{
+                fontWeight: "bold",
+                marginRight: "10px",
+                flexShrink: 0,
+              }}
+            >
+              Số trang in mặc định
+            </label>
+            <InputNumber
+              id="pageCount"
+              value={selectedPageCount}
+              onValueChange={(e) => setSelectedPageCount(e.value || 1)}
+              min={1}
+              max={1000}
+              className="p-d-block"
+              style={{ width: "20%" }}
+            />
+          </div>
+        </div>
 
-          <Column
-            body={(rowData) => (
-              <Button
-                label={rowData.isActive ? "Vô hiệu hóa" : "Kích hoạt"}
-                icon={rowData.isActive ? "pi pi-times" : "pi pi-check"}
-                onClick={() => togglePrinterActivation(rowData.id)}
-                className={`p-button-${
-                  rowData.isActive ? "danger" : "success"
-                }`}
-                disabled={rowData.status === "Đang in"} // Vô hiệu hóa nút nếu máy in đang in
-              />
-            )}
-            header="Vô hiệu hóa/Kích hoạt"
-          />
-          <Column
-            body={(rowData) => (
-              <Button
-                label="Xóa"
-                icon="pi pi-trash"
-                onClick={() => deletePrinter(rowData.id)}
-                className="p-button-danger"
-              />
-            )}
-            header="Hành động"
-          />
-        </DataTable>
+        {/* Các định dạng file được cho phép */}
+        <div className="p-mb-4">
+          <div
+            className="p-d-flex p-jc-between p-ai-center"
+            style={{ marginBottom: "1rem" }}
+          >
+            <label
+              htmlFor="formats"
+              style={{
+                fontWeight: "bold",
+                marginRight: "10px",
+                flexShrink: 0,
+              }}
+            >
+              Các định dạng file được cho phép
+            </label>
+            <MultiSelect
+              id="formats"
+              value={selectedFormats}
+              options={formats}
+              onChange={(e) => setSelectedFormats(e.value)}
+              optionLabel="label"
+              placeholder="Chọn định dạng file"
+              className="p-d-block"
+              display="chip"
+              style={{ width: "20%" }}
+            />
+          </div>
+        </div>
+
+        {/* Save Settings Button */}
+        <Button
+          label="Lưu cài đặt"
+          icon="pi pi-save"
+          className="p-button-success p-mt-3"
+          style={{ width: "20%" }}
+          onClick={handleSaveSettings}
+        />
       </Card>
     </div>
   );
 };
 
-export default SPSO_Management;
+export default SPSO_Setting;
