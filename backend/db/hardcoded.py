@@ -13,7 +13,7 @@ from models import (
     PrintJob,
     PageSize,
 )
-
+from os import makedirs
 
 class HardCodedDB(Repo):
     def __init__(self):
@@ -201,16 +201,20 @@ class HardCodedDB(Repo):
             filter(lambda printer: printer.id == printer_id, self.printers),
             None
         )
+        if deleted_printer is None:
+            raise ValueError(f"Printer with id {printer_id} not found")
         deleted_printer.status = Status.DISABLED
         self.printers = list(
             filter(lambda printer: printer.id != printer_id, self.printers)
         )
 
-    def update_printer(self, printer: Printer):
+    def update_printer(self, printer: Printer) -> Printer:
         updated_printer = next(
             filter(lambda p: p.id == printer.id, self.printers),
             None
         )
+        if updated_printer is None:
+            raise ValueError(f"Printer with id {printer.id} not found")
         updated_printer.brand = printer.brand
         updated_printer.model = printer.model
         updated_printer.description = printer.description
@@ -236,6 +240,9 @@ class HardCodedDB(Repo):
         returns the id of the uploaded document
         """
         FILE_PATH = "files"
+        # ensure the file path exists
+        makedirs(FILE_PATH, exist_ok=True)
+        
         file_id = 1 if len(self.documents) == 0 else self.documents[-1].file_id + 1
 
         with open(f"{FILE_PATH}/{file_id}.{ext}", "wb") as f:
