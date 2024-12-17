@@ -112,10 +112,11 @@ async def add_printer(request: Request, printer: Printer):
 
 @app.post("/printer/update")
 async def update_printer(request: Request, printer: Printer):
-    if auth.role(request.state.user) != "spso":
-        raise HTTPException(status_code=403, detail="Forbidden")
-    if printer.id is None:
-        raise HTTPException(status_code=400, detail="Printer ID is required")
+    # if auth.role(request.state.user) != "spso":
+    #     raise HTTPException(status_code=403, detail="Forbidden")
+    # if printer.id is None:
+    #     raise HTTPException(status_code=400, detail="Printer ID is required")
+    print(printer)
     try:
         p = db.update_printer(printer)
         return {"id": p.id}

@@ -12,8 +12,11 @@ import { handleGetSystem, handleDeletePrinter, handleGetPrinter, handleUpdatePri
 
 interface Printer {
   id: number;
-  name: string;
-  is_running: string; // "Đang in" hoặc "Không đang in"
+  name?: string;
+  model: string;
+  brand: string;
+  description: string
+  is_running: boolean; // "Đang in" hoặc "Không đang in"
   status: boolean; // true: Kích hoạt, false: Vô hiệu hóa
 }
 
@@ -36,14 +39,17 @@ const SPSO_Management = () => {
         const response = await handleGetPrinter();
         const formattedData = ((response.data) as
           {
-            map: any, id: number, branch: string,
-            model: string, des: string,
+            map: any, id: number, brand: string,
+            model: string, description: string,
             status: number, is_running: boolean
           }).map((item: any) => ({
             id: item.id,
             name: "Máy in " + item.id,
-            status: item.status,
-            is_running: item.is_running == true ? "Đang in" : "Không đang in"
+            model: item.model,
+            brand: item.brand,
+            description: item.description,
+            status: item.status == 1 ? true : false,
+            is_running: item.is_running
           }))
 
         setPrinters(formattedData);
@@ -55,45 +61,61 @@ const SPSO_Management = () => {
     fetchPrinters();
   }, []);
 
-  // Hàm thay đổi trạng thái hoạt động của máy in
-  // const togglePrinterStatus = (printerId: number) => {
-  //   setPrinters((prevPrinters) =>
-  //     prevPrinters.map((printer) =>
-  //       printer.id === printerId
-  //         ? {
-  //           ...printer,
-  //           status:
-  //             printer.status === "Đang in" ? "Không đang in" : "Đang in",
-  //         }
-  //         : printer
-  //     )
-  //   );
-  //   toast?.current?.show({
-  //     severity: "success",
-  //     summary: "Thành công",
-  //     detail: "Đã thay đổi trạng thái máy in",
-  //     life: 3000,
-  //   });
-  // };
-
-  // Hàm vô hiệu hóa hoặc kích hoạt máy in
-  const togglePrinterActivation = async (printerId: number) => {
+  //Hàm thay đổi trạng thái hoạt động của máy in
+  const togglePrinterStatus = (printerId: number) => {
     setPrinters((prevPrinters) =>
       prevPrinters.map((printer) =>
         printer.id === printerId
-          ? printer.is_running === "Đang in"
-            ? // Nếu máy in đang in, không thể vô hiệu hóa
+          ? {
+            ...printer,
+            status:
+              printer.status === true ? false : true,
+          }
+          : printer
+      )
+    );
+    toast?.current?.show({
+      severity: "success",
+      summary: "Thành công",
+      detail: "Đã thay đổi trạng thái máy in",
+      life: 3000,
+    });
+  };
+
+  // Hàm vô hiệu hóa hoặc kích hoạt máy in
+  const togglePrinterActivation = async (printerId: number) => {
+    setPrinters((prevPrinters) => {
+      return prevPrinters.map((printer) => {
+        if (printer.id === printerId) {
+          if (printer.is_running) {
             toast?.current?.show({
               severity: "error",
               summary: "Không thành công",
               detail: "Không thể vô hiệu hóa khi máy in đang in.",
               life: 3000,
-            })
-            : { ...printer, status: !printer.status }
-          : printer
-      )
-    );
-    await handleUpdatePrinter(printerId)
+            });
+            return printer;
+          }
+          return { ...printer, status: !printer.status };
+        }
+        return printer;
+      });
+    });
+    console.log(printers)
+
+    // let updatedPrinter: Printer | undefined;
+    // setPrinters((prevPrinters) => {
+    //   updatedPrinter = prevPrinters.find((p) => p.id === printerId);
+    //   return prevPrinters; // No actual update, just capturing the updated printer
+    // });
+
+    // if (updatedPrinter) {
+    //   const { name, ...printerWithoutName } = updatedPrinter;
+
+    //   await handleUpdatePrinter({ ...printerWithoutName, name: undefined });
+
+    //   console.log("Printer updated:", { ...printerWithoutName, name });
+    // }
   };
 
   // Hàm xóa máy in
@@ -113,7 +135,7 @@ const SPSO_Management = () => {
 
   // Hàm lọc theo tên máy in
   const filteredPrinters = printers.filter((printer) =>
-    printer.name.toLowerCase().includes(searchText.toLowerCase())
+    printer.name?.toLowerCase().includes(searchText.toLowerCase())
   );
 
   // Add printer
@@ -129,9 +151,12 @@ const SPSO_Management = () => {
         ...prevPrinters,
         {
           id: response.data.id,
+          model: response.data.model,
+          brand: response.data.brand,
+          description: response.data.description,
           name: `Máy in ${response.data.id}`,
           status: true,
-          is_running: "Không đang in",
+          is_running: false,
         },
       ]);
     } catch (error) {
@@ -205,7 +230,10 @@ const SPSO_Management = () => {
           }}
         >
           <Column field="name" header="Tên máy in" sortable />
-          <Column field="is_running" header="Trạng thái" />
+          <Column
+            header="Trạng thái"
+            body={(rowData) => (rowData.is_running ? "Đang in" : "Không đang in")}
+          />
           <Column
             body={(rowData) => (
               <Button
@@ -213,7 +241,7 @@ const SPSO_Management = () => {
                 icon={rowData.status ? "pi pi-times" : "pi pi-check"}
                 className={`p-button-${rowData.status ? "danger" : "success"}`}
                 onClick={() => togglePrinterActivation(rowData.id)}
-                disabled={rowData.is_running === "Đang in"}
+                disabled={rowData.is_running === true}
               />
             )}
             header="Vô hiệu hóa/Kích hoạt"

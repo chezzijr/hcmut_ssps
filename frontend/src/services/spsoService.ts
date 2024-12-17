@@ -8,8 +8,8 @@ const handleGetSystem = () => {
     return axios.get("/system");
 }
 
-const handleUpdatePrinter = (printer_id: any) => {
-    return axios.post(`printer/update/${printer_id}`);
+const handleUpdatePrinter = (printer: any) => {
+    return axios.post(`printer/update`, printer);
 }
 
 const handleDeletePrinter = (printer_id: any) => {
