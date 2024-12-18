@@ -48,7 +48,7 @@ const SPSO_Management = () => {
             model: item.model,
             brand: item.brand,
             description: item.description,
-            status: item.status == 1 ? true : false,
+            status: item.status,
             is_running: item.is_running
           }))
 
@@ -84,38 +84,37 @@ const SPSO_Management = () => {
 
   // Hàm vô hiệu hóa hoặc kích hoạt máy in
   const togglePrinterActivation = async (printerId: number) => {
-    setPrinters((prevPrinters) => {
-      return prevPrinters.map((printer) => {
-        if (printer.id === printerId) {
-          if (printer.is_running) {
+    setPrinters((prevPrinters) =>
+      prevPrinters.map((printer) =>
+        printer.id === printerId
+          ? printer.is_running === true
+            ? // Nếu máy in đang in, không thể vô hiệu hóa
             toast?.current?.show({
               severity: "error",
               summary: "Không thành công",
               detail: "Không thể vô hiệu hóa khi máy in đang in.",
               life: 3000,
-            });
-            return printer;
-          }
-          return { ...printer, status: !printer.status };
-        }
-        return printer;
-      });
-    });
-    console.log(printers)
+            })
+            : { ...printer, status: !printer.status }
+          : printer
+      )
+    );
+  };
 
-    // let updatedPrinter: Printer | undefined;
-    // setPrinters((prevPrinters) => {
-    //   updatedPrinter = prevPrinters.find((p) => p.id === printerId);
-    //   return prevPrinters; // No actual update, just capturing the updated printer
-    // });
+  //Hàm update máy in 
+  const updatePrinter = async (printerId: number) => {
+    await togglePrinterActivation(printerId);
 
-    // if (updatedPrinter) {
-    //   const { name, ...printerWithoutName } = updatedPrinter;
+    let printer = printers.find((printer) => printer.id === printerId)
+    if (printer) {
+      const name = printer.name;
+      printer.name = undefined;
+      printer.status = !printer.status
 
-    //   await handleUpdatePrinter({ ...printerWithoutName, name: undefined });
+      await handleUpdatePrinter(printer);
 
-    //   console.log("Printer updated:", { ...printerWithoutName, name });
-    // }
+      printer.name = name; // Khôi phục lại name
+    }
   };
 
   // Hàm xóa máy in
@@ -240,7 +239,7 @@ const SPSO_Management = () => {
                 label={rowData.status ? "Vô hiệu hóa" : "Kích hoạt"}
                 icon={rowData.status ? "pi pi-times" : "pi pi-check"}
                 className={`p-button-${rowData.status ? "danger" : "success"}`}
-                onClick={() => togglePrinterActivation(rowData.id)}
+                onClick={() => updatePrinter(rowData.id)}
                 disabled={rowData.is_running === true}
               />
             )}
@@ -253,6 +252,7 @@ const SPSO_Management = () => {
                 icon="pi pi-trash"
                 onClick={() => deletePrinter(rowData.id)}
                 className="p-button-danger"
+                disabled={rowData.is_running === true}
               />
             )}
             header="Hành động"
