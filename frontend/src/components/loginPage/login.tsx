@@ -42,13 +42,6 @@ const Login: React.FC = () => {
                 {" "}
                 Admin{" "}
               </button>
-              <button
-                type="button"
-                onClick={() => handleNavigation("/spso-login")}
-              >
-                {" "}
-                SPSO{" "}
-              </button>
             </div>
           </form>
         </div>

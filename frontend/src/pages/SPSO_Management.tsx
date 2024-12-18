@@ -142,7 +142,11 @@ const SPSO_Management = () => {
     try {
       const response = await axios.post(
         "http://localhost:8000/printer/add",
-        newPrinter
+        newPrinter, {
+        headers: {
+          Authorization: localStorage.getItem("authorization"),
+        }
+      }
       );
       alert("Thêm máy in thành công!");
       setShowAddPrinterDialog(false);
