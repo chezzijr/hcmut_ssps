@@ -25,7 +25,11 @@ const handleUpdatePrinter = (printer: any) => {
 }
 
 const handleDeletePrinter = (printer_id: any) => {
-    return axios.delete(`printer/delete/${printer_id}`);
+    return axios.delete(`printer/delete/${printer_id}`, {
+        headers: {
+            Authorization: localStorage.getItem("authorization"),
+        }
+    });
 }
 
 export { handleGetPrinter, handleGetSystem, handleUpdatePrinter, handleDeletePrinter };
