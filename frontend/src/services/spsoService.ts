@@ -11,13 +11,17 @@ const handleGetPrinter = () => {
 const handleGetSystem = () => {
     return axios.get("/system", {
         headers: {
-            Authorization: localStorage.getItem("authorization"),
+            //Authorization: localStorage.getItem("authorization"),
         }
     });
 }
 
-const handleUpdatePrinter = (printer_id: any) => {
-    return axios.post(`printer/update/${printer_id}`);
+const handleUpdatePrinter = (printer: any) => {
+    return axios.post(`printer/update`, printer, {
+        headers: {
+            Authorization: localStorage.getItem("authorization"),
+        }
+    });
 }
 
 const handleDeletePrinter = (printer_id: any) => {
