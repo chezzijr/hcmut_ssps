@@ -54,14 +54,6 @@ export default function PrintingHistory() {
                     <Column field="printer_id" header="ID máy in" />
                     <Column field="description" header="Mô tả" />
                     <Column field="date" header="Ngày"  />
-                    {/* <Column field="print_job.copies" header="Số bản in" /> */}
-                    {/* <Column field="print_job.page_size" header="Kích thước trang" /> */}
-                    {/* <Column field="print_job.double_sided" header="In 2 mặt" /> */}
-                    {/* <Column field="print_job.student_id" header="ID sinh viên" /> */}
-                    {/* <Column field="print_job.document.file_id" header="ID tài liệu" /> */}
-                    {/* <Column field="print_job.document.file_name" header="Tên tài liệu" /> */}
-                    {/* <Column field="print_job.document.file_type" header="Loại tài liệu" /> */}
-                    {/* <Column field="print_job.document.pages" header="Số trang" /> */}
                 </DataTable>
             )}
         </div>
