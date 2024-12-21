@@ -12,6 +12,7 @@ type Student = {
 }
 
 const UserHome = () => {
+    document.title = "Trang chủ";
     const [showRecentPrints, setShowRecentPrints] = useState(false);
     const recentPrints = Array(10).fill("Tài liệu.docx");
     const [student, setStudent] = useState({

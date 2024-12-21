@@ -11,6 +11,7 @@ type SystemConfig = {
 }
 
 const UserBuying: React.FC = () => {
+    document.title = "Mua giấy in";
     const [pageCount, setPageCount] = useState("");
     const [totalPrice, setTotalPrice] = useState<number | null>(null);
     const [systemConfig, setSystemConfig] = useState<SystemConfig | null>(null);
