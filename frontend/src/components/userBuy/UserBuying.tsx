@@ -1,12 +1,32 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import Header from "../header/Header";
 import axios from "axios";
 
+type SystemConfig = {
+    default_num_pages_per_sem: number
+    prices_per_page: number
+    allowed_file_types: string[]
+}
+
 const UserBuying: React.FC = () => {
     const [pageCount, setPageCount] = useState("");
     const [totalPrice, setTotalPrice] = useState<number | null>(null);
+    const [systemConfig, setSystemConfig] = useState<SystemConfig | null>(null);
+
+    useEffect(() => {
+        axios.get("http://localhost:8000/system", {
+            headers: {
+                Authorization: localStorage.getItem("authorization"),
+            },
+        }).then((res) => {
+            setSystemConfig(res.data);
+        }).catch((err) => {
+            alert("Lỗi khi lấy thông tin hệ thống" + err);
+        });
+    }, []);
+
 
     const handlePageCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const count = e.target.value;
@@ -14,7 +34,7 @@ const UserBuying: React.FC = () => {
 
         const parsedCount = parseInt(count, 10);
         if (!isNaN(parsedCount)) {
-            setTotalPrice(parsedCount * 500);
+            setTotalPrice(parsedCount * (systemConfig?.prices_per_page ?? 500));
         } else {
             setTotalPrice(null);
         }
