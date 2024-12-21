@@ -1,25 +1,48 @@
-import React from "react";
+import React, { useState } from "react";
 import logo from "./logoBK.png";
 import "./AdminLogin.css";
 import { InputText } from "primereact/inputtext";
 import { useNavigate } from "react-router-dom";
+import { login } from "../../../services/api";
 
 interface SPSOLoginProps {
   setUserType: (type: "admin" | "spso" | "student" | " ") => void;
 }
 
 const SPSOLogin: React.FC<SPSOLoginProps> = ({ setUserType }) => {
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
-  const handleNavigation = (path: string) => {
-    if (path === "/spso") {
-      setUserType("spso");
+  const handleNavigation = (role: string) => {
+    setUserType(role as "admin" | "spso" | "student" | " ");
+    if (role === "student") {
+      navigate("/home");
+    } else {
+      navigate("/spso");
     }
-    navigate(path);
   };
+  const handleLogin = async () => {
+    try {
+      const data = await login(username, password);
+      console.log("Login successful", data);
+
+      if (data?.token && data?.role) {
+        localStorage.setItem("authorization", data.token);
+        handleNavigation(data.role);
+      } else {
+        setErrorMessage("Invalid response from server.");
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || "Login failed. Please try again.");
+    }
+  };
+
   return (
     <div className="Login">
       <div className="LoginFrame">
-        <div className="AdminLogin">
+        <div className="SPSOLogin">
           <form action="#">
             <div>
               <img src={logo} alt="Logo HCMUT" style={{ paddingTop: "20px" }} />
@@ -28,7 +51,9 @@ const SPSOLogin: React.FC<SPSOLoginProps> = ({ setUserType }) => {
             <div className="p-field">
               <InputText
                 id="email"
-                placeholder="Your Admin ID"
+                placeholder="Your SPSO ID"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 style={{
                   backgroundColor: "#D9D9D9",
                   width: "100%",
@@ -38,6 +63,8 @@ const SPSOLogin: React.FC<SPSOLoginProps> = ({ setUserType }) => {
               <InputText
                 id="password"
                 placeholder="Mật khẩu"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 style={{
                   backgroundColor: "#D9D9D9",
                   width: "100%",
@@ -55,8 +82,8 @@ const SPSOLogin: React.FC<SPSOLoginProps> = ({ setUserType }) => {
             >
               Quên mật khẩu?
             </a>
-            <div className="adminButtonLogin">
-              <button type="button" onClick={() => handleNavigation("/spso")}>
+            <div className="spsoButtonLogin">
+              <button type="button" onClick={handleLogin}>
                 Đăng nhập
               </button>
               <button type="button" onClick={() => handleNavigation("/login")}>
@@ -67,10 +94,10 @@ const SPSOLogin: React.FC<SPSOLoginProps> = ({ setUserType }) => {
           </form>
         </div>
 
-        <div className="adminLoginContent">
-          <div className="line1">Đăng nhập với quyền Admin</div>
+        <div className="spsoLoginContent">
+          <div className="line1">Đăng nhập với quyền SPSO</div>
           <div className="line2">
-            <div>Bạn đang đăng nhập vào hệ thống với quyền Admin.</div>
+            <div>Bạn đang đăng nhập vào hệ thống với quyền SPSO.</div>
             <div>
               Nếu có sự nhầm lẫn vui lòng bấm quay lại để tiếp tục quá trình
               đăng nhập.

@@ -11,17 +11,25 @@ const handleGetPrinter = () => {
 const handleGetSystem = () => {
     return axios.get("/system", {
         headers: {
+            //Authorization: localStorage.getItem("authorization"),
+        }
+    });
+}
+
+const handleUpdatePrinter = (printer: any) => {
+    return axios.post(`printer/update`, printer, {
+        headers: {
             Authorization: localStorage.getItem("authorization"),
         }
     });
 }
 
-const handleUpdatePrinter = (printer_id: any) => {
-    return axios.post(`printer/update/${printer_id}`);
-}
-
 const handleDeletePrinter = (printer_id: any) => {
-    return axios.delete(`printer/delete/${printer_id}`);
+    return axios.delete(`printer/delete/${printer_id}`, {
+        headers: {
+            Authorization: localStorage.getItem("authorization"),
+        }
+    });
 }
 
 export { handleGetPrinter, handleGetSystem, handleUpdatePrinter, handleDeletePrinter };
