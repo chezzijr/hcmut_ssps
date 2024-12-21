@@ -12,6 +12,7 @@ type Printer = {
 }
 
 export default function Printers() {
+    document.title = "Danh sách máy in";
     const [printers, setPrinters] = useState<Printer[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
