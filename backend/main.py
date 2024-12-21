@@ -10,9 +10,11 @@ from time import sleep
 import docx
 import io
 import PyPDF2
+
 app = FastAPI()
 auth = Auth()
 db = init_db()
+
 
 def log_callback(printer: Printer, print_job: PrintJob):
     assert (
@@ -36,6 +38,7 @@ for printer in db.get_printers():
     printer_thread = Thread(target=printer.run, args=(log_callback,))
     printer_thread.start()
 
+
 def add_pages_each_sem():
     time = datetime.now()
     # first semester starts from 15th August
@@ -51,6 +54,7 @@ def add_pages_each_sem():
         db.add_pages_to_students()
         # sleep for 1 day to avoid multiple calls
         sleep(24 * 60 * 60 + 1)
+
 
 Thread(target=add_pages_each_sem).start()
 
@@ -133,7 +137,9 @@ async def delete_printer(request: Request, printer_id: int):
     if printer is None:
         raise HTTPException(status_code=404, detail="Printer not found")
     if printer.status == Status.ENABLED:
-        raise HTTPException(status_code=400, detail="Printer is enabled. Please disable it first")
+        raise HTTPException(
+            status_code=400, detail="Printer is enabled. Please disable it first"
+        )
     try:
         db.delete_printer(printer_id)
         return {"id": printer_id}
@@ -147,10 +153,15 @@ async def add_printjob(request: Request, print_job: PrintJob):
         raise HTTPException(status_code=403, detail="Forbidden")
 
     printers = db.get_printers()
-    least_busy_printer = min(printers, key=lambda printer: len(printer._printing_queue))
+    least_busy_printer = min(
+        [printer for printer in printers if printer.status == Status.ENABLED],
+        key=lambda printer: len(printer._printing_queue),
+    )
+    if least_busy_printer is None:
+        raise HTTPException(status_code=400, detail="No active printer available")
     assert least_busy_printer is not None and least_busy_printer.id is not None
 
-    num_pages = print_job.document.pages * print_job.copies if not print_job.double_sided else (print_job.document.pages // 2 + 1) * print_job.copies
+    num_pages = print_job.count_num_pages()
     student = db.get_student_by_id(request.state.user)
     if student is None:
         raise HTTPException(status_code=403, detail="Forbidden")
@@ -166,7 +177,6 @@ async def add_printjob(request: Request, print_job: PrintJob):
     least_busy_printer.add_printjob(print_job)
     print_job.student_id = request.state.user
 
-
     log = Log(
         description=f"[QUEUE] user={print_job.student_id} doc={print_job.document.file_name}",
         student_id=request.state.user,
@@ -178,17 +188,22 @@ async def add_printjob(request: Request, print_job: PrintJob):
 
     return print_job
 
+
 @app.post("/printer/{printer_id}/print")
-async def add_printjob_to_printer(request: Request, printer_id: int, print_job: PrintJob):
+async def add_printjob_to_printer(
+    request: Request, printer_id: int, print_job: PrintJob
+):
     if auth.role(request.state.user) != "student":
         raise HTTPException(status_code=403, detail="Forbidden")
 
     printer = db.get_printer_by_id(printer_id)
     if printer is None:
         raise HTTPException(status_code=404, detail="Printer not found")
+    if printer.status == Status.DISABLED:
+        raise HTTPException(status_code=400, detail="Printer is disabled")
     assert printer.id is not None
 
-    num_pages = print_job.document.pages * print_job.copies if not print_job.double_sided else (print_job.document.pages // 2 + 1) * print_job.copies
+    num_pages = print_job.count_num_pages()
     student = db.get_student_by_id(request.state.user)
     if student is None:
         raise HTTPException(status_code=403, detail="Forbidden")
@@ -198,9 +213,7 @@ async def add_printjob_to_printer(request: Request, printer_id: int, print_job: 
     db.update_student(student)
 
     print_job.student_id = request.state.user
-    print_job.id = (
-        int(datetime.now().timestamp() * 1000) << 32
-    ) | printer.id
+    print_job.id = (int(datetime.now().timestamp() * 1000) << 32) | printer.id
     printer.add_printjob(print_job)
 
     log = Log(
@@ -294,6 +307,7 @@ async def upload_file(request: Request):
 
     return document
 
+
 @app.get("/student")
 async def get_student(request: Request):
     if auth.role(request.state.user) != "student":
@@ -302,6 +316,7 @@ async def get_student(request: Request):
     student = db.get_student_by_id(student_id)
     assert student is not None
     return student
+
 
 @app.get("/student/{student_id}")
 async def get_student_by_id(request: Request, student_id: int):
@@ -312,9 +327,11 @@ async def get_student_by_id(request: Request, student_id: int):
         raise HTTPException(status_code=404, detail="Student not found")
     return student
 
+
 @app.get("/system")
 async def get_system_config():
     return db.get_system_config()
+
 
 @app.post("/system/update")
 async def update_system_config(request: Request, config: SystemConfig):
@@ -323,6 +340,7 @@ async def update_system_config(request: Request, config: SystemConfig):
     db.update_system_config(config)
     return config
 
+
 @app.get("/log")
 async def get_logs(request: Request):
     logs = db.get_logs()
@@ -330,8 +348,11 @@ async def get_logs(request: Request):
         logs = [log for log in logs if log.student_id == request.state.user]
     return logs
 
+
 class BuyPagesBody(BaseModel):
     pages: int
+
+
 @app.post("/buy_pages")
 async def buy_pages(request: Request, body: BuyPagesBody):
     if auth.role(request.state.user) != "student":
