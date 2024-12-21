@@ -45,13 +45,13 @@ export default function Printers() {
 
     return (
         <div>
-            <h1>Printers</h1>
+            <h1>Máy in</h1>
             <DataTable value={printers}>
-                <Column field="brand" header="Brand"></Column>
+                <Column field="brand" header="Hãng"></Column>
                 <Column field="model" header="Model"></Column>
-                <Column field="description" header="Description"></Column>
-                <Column field="status" header="Status"></Column>
-                <Column field="is_running" header="Is Running"></Column>
+                <Column field="description" header="Chú thích"></Column>
+                <Column field="status" header="Trạng thái"></Column>
+                <Column field="is_running" header="Đang hoạt động"></Column>
             </DataTable>
         </div>
     );

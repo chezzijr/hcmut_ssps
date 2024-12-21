@@ -34,11 +34,8 @@ const Sidebar = () => {
                 <button onClick={() => handleNavigation("./user-buying")}>
                     <FaCartPlus /> Mua trang in
                 </button>
-                <button>
-                    <FaCog /> Cài đặt
-                </button>
-                <button>
-                    <FaPhone /> Hỗ trợ dịch vụ
+                <button onClick={() => handleNavigation("./printing-queue")}>
+                    <FaCog /> Hàng đợi in
                 </button>
                 <button onClick={() => handleNavigation("./printers")}>
                     <FaInfoCircle /> Thông tin máy in
