@@ -38,6 +38,7 @@ import PrintingHistory from "./pages/PrintingHistory";
 import PrintingQueue from "./pages/PrintingQueue";
 
 function AppWrapper() {
+    document.title = "Hệ thống in ấn trường Đại học Bách Khoa TPHCM";
     return (
         <Router>
             <App />
