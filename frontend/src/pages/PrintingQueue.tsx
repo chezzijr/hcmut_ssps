@@ -36,13 +36,13 @@ export default function PrintingQueue() {
         <>
             <h1>Hàng đợi in</h1>
             <DataTable value={printjobs}>
-                <Column field="id" header="ID" />
+                {/* <Column field="id" header="ID" /> */}
                 <Column field="document.file_name" header="Tên tài liệu" />
                 <Column field="document.pages" header="Số trang" />
                 <Column field="copies" header="Số bản" />
                 <Column field="page_size" header="Kích thước" />
                 <Column field="double_sided" header="In 2 mặt" />
-                <Column field="student_id" header="Mã sinh viên" />
+                {/* <Column field="student_id" header="Mã sinh viên" /> */}
             </DataTable>
         </>
     );
