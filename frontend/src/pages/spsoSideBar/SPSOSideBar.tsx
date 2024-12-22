@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "primereact/button";
 import "./SPSOSideBar.css";
-import avatarUser from "./100.png";
+import avatarUser from "./logobk.png";
 import { useNavigate } from "react-router-dom";
 
 const SPSOSideBar = () => {
@@ -25,12 +25,13 @@ const SPSOSideBar = () => {
             objectFit: "cover",
           }}
         />
-        <div className="user-name" style={{ color: "black" }}>
-          SPSO name
+        <div className="user-name" style={{ color: "black", fontWeight: "bold" }}>
+          SPSO 1
         </div>
-        <div className="user-id" style={{ color: "black" }}>
-          SPSO ID
+        <div className="user-id" style={{ color: "black", fontWeight: "bold" }}>
+          ID: 1
         </div>
+
         <Button
           label="Thoát"
           className="p-button-danger"
