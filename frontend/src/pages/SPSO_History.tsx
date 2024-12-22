@@ -146,7 +146,7 @@ const SPSO_History = () => {
                         borderRadius: "8px",
                     }}
                 >
-                    <Column field="id" header="ID" sortable />
+                    {/* <Column field="id" header="ID" sortable /> */}
                     <Column field="description" header="Mô tả" sortable />
                     <Column field="student_id" header="MSSV" sortable />
                     <Column field="printer_id" header="ID Máy in" sortable />

@@ -63,7 +63,7 @@ class HardCodedDB(Repo):
                 model="PIXMA TR4520",
                 description="",
                 status=Status.ENABLED,
-                is_running= True,
+                is_running= False,
             ),
             Printer(
                 id=3,
