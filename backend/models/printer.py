@@ -30,8 +30,8 @@ class Printer(BaseModel):
                 sleep(1)
                 continue
             self.is_running = True
-            printjob = self._printing_queue.pop(0)
-            print(f"Sleeping for {printjob.count_num_pages() * 0.1} seconds")
+            printjob = self._printing_queue[0]
             sleep(printjob.count_num_pages() * 0.1)
+            self._printing_queue.pop(0)
             self.is_running = False
             callback(self, printjob)
