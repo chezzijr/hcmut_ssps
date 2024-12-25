@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card } from "primereact/card";
 import { InputNumber } from "primereact/inputnumber";
 import { MultiSelect } from "primereact/multiselect";
 import { Button } from "primereact/button";
+import { Toast } from "primereact/toast";
 import axios from "axios";
 import "primereact/resources/themes/lara-light-indigo/theme.css";
 import "primereact/resources/primereact.min.css";
@@ -12,6 +13,7 @@ const SPSO_Setting: React.FC = () => {
     const [pagePrice, setPagePrice] = useState<number>(0); // Giá tiền mỗi trang
     const [selectedPageCount, setSelectedPageCount] = useState<number>(20); // Số trang mặc định
     const [selectedFormats, setSelectedFormats] = useState<string[]>([]); // Định dạng file được phép
+    const toast = useRef<Toast>(null); // Tham chiếu tới Toast
 
     const formats = [
         { label: ".docx", value: "docx" },
@@ -38,6 +40,7 @@ const SPSO_Setting: React.FC = () => {
                 setSelectedFormats(data.allowed_file_types);
             } catch (error) {
                 console.error("Lỗi khi fetch dữ liệu:", error);
+                toast.current?.show({ severity: "error", summary: "Lỗi", detail: "Không thể lấy dữ liệu", life: 3000 });
             }
         };
 
@@ -58,10 +61,10 @@ const SPSO_Setting: React.FC = () => {
                     Authorization: localStorage.getItem("authorization"),
                 }
             });
-            alert("Cập nhật cài đặt thành công!");
+            toast.current?.show({ severity: "success", summary: "Thành công", detail: "Cập nhật cài đặt thành công!", life: 3000 });
         } catch (error) {
             console.error("Lỗi khi cập nhật dữ liệu:", error);
-            alert("Cập nhật cài đặt thất bại!");
+            toast.current?.show({ severity: "error", summary: "Thất bại", detail: "Cập nhật cài đặt thất bại!", life: 3000 });
         }
     };
 
@@ -75,6 +78,9 @@ const SPSO_Setting: React.FC = () => {
                 boxSizing: "border-box",
             }}
         >
+            {/* Toast component */}
+            <Toast ref={toast} />
+
             {/* Header Card */}
             <Card
                 style={{

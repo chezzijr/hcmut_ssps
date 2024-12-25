@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
+import { Toast } from "primereact/toast";
 import Header from "../header/Header";
 import axios from "axios";
 
 const UserBuying: React.FC = () => {
     const [pageCount, setPageCount] = useState("");
     const [totalPrice, setTotalPrice] = useState<number | null>(null);
-
+    const toast = useRef<Toast>(null);
     const handlePageCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const count = e.target.value;
         setPageCount(count);

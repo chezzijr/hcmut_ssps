@@ -17,7 +17,7 @@ interface Printer {
   model: string;
   brand: string;
   description: string
-  is_running: boolean; // "Đang in" hoặc "Không đang in"
+  is_running: boolean; 
   status: boolean; // true: Kích hoạt, false: Vô hiệu hóa
 }
 
@@ -64,6 +64,7 @@ const [selectedPrinterId, setSelectedPrinterId] = useState<number | null>(null);
 
     fetchPrinters();
   }, []);
+  //dialog delete
   const confirmDeletePrinter = (printerId: number) => {
     setSelectedPrinterId(printerId); // Lưu lại ID máy in
     setShowConfirmDialog(true); // Hiển thị Dialog
@@ -79,7 +80,30 @@ const [selectedPrinterId, setSelectedPrinterId] = useState<number | null>(null);
     setShowConfirmDialog(false);
     setSelectedPrinterId(null);
   };
-    
+    // dialog update printer
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false); // Trạng thái hiển thị dialog xác nhận update
+  const [selectedUpdatePrinterId, setSelectedUpdatePrinterId] = useState<number | null>(null); // Lưu ID máy in cần update
+  // Hiển thị Dialog xác nhận
+  const confirmUpdatePrinter = (printerId: number) => {
+    setSelectedUpdatePrinterId(printerId); // Lưu ID máy in cần update
+    setShowUpdateDialog(true); // Hiển thị Dialog
+  };
+
+  // Hủy Dialog xác nhận
+  const handleCancelUpdate = () => {
+    setShowUpdateDialog(false); // Đóng Dialog
+    setSelectedUpdatePrinterId(null); // Reset ID máy in
+  };
+
+  // Thực hiện cập nhật sau khi xác nhận
+  const handleConfirmUpdate = async () => {
+    if (selectedUpdatePrinterId !== null) {
+        await updatePrinter(selectedUpdatePrinterId); // Gọi hàm updatePrinter
+        setShowUpdateDialog(false); // Đóng Dialog
+        setSelectedUpdatePrinterId(null); // Reset ID
+    }
+  };
+
   //Hàm thay đổi trạng thái hoạt động của máy in
   const togglePrinterStatus = (printerId: number) => {
     setPrinters((prevPrinters) =>
@@ -124,20 +148,36 @@ const [selectedPrinterId, setSelectedPrinterId] = useState<number | null>(null);
 
   //Hàm update máy in 
   const updatePrinter = async (printerId: number) => {
-    await togglePrinterActivation(printerId);
+    try {
+        await togglePrinterActivation(printerId); // Cập nhật trạng thái cục bộ
 
-    let printer = printers.find((printer) => printer.id === printerId)
-    if (printer) {
-      const name = printer.name;
-      printer.name = undefined;
-      printer.status = !printer.status
+        let printer = printers.find((printer) => printer.id === printerId);
+        if (printer) {
+            const name = printer.name; // Lưu lại tên ban đầu
+            printer.name = undefined; // Xóa name tạm thời
+            printer.status = !printer.status; // Đổi trạng thái
 
-      await handleUpdatePrinter(printer);
+            await handleUpdatePrinter(printer); // Gửi lên server
 
-      printer.name = name; // Khôi phục lại name
+            printer.name = name; // Khôi phục lại tên sau khi cập nhật
+
+            toast.current?.show({
+                severity: "success",
+                summary: "Thành công",
+                detail: `Máy in với ID ${printerId} đã được cập nhật.`,
+                life: 3000,
+            });
+        }
+    } catch (error) {
+        console.error("Lỗi khi cập nhật máy in:", error);
+        toast.current?.show({
+            severity: "error",
+            summary: "Lỗi",
+            detail: `Không thể cập nhật máy in với ID ${printerId}.`,
+            life: 3000,
+        });
     }
-  };
-
+};
   // Hàm xóa máy in
   const deletePrinter = async (printerId: number) => {
     try {
@@ -171,14 +211,13 @@ const [selectedPrinterId, setSelectedPrinterId] = useState<number | null>(null);
     try {
       const response = await axios.post(
         "http://localhost:8000/printer/add",
-        newPrinter, {
-        headers: {
-          Authorization: localStorage.getItem("authorization"),
+        newPrinter,
+        {
+          headers: {
+            Authorization: localStorage.getItem("authorization"),
+          },
         }
-      }
       );
-      alert("Thêm máy in thành công!");
-      setShowAddPrinterDialog(false);
       setPrinters((prevPrinters) => [
         ...prevPrinters,
         {
@@ -186,14 +225,38 @@ const [selectedPrinterId, setSelectedPrinterId] = useState<number | null>(null);
           model: response.data.model,
           brand: response.data.brand,
           description: response.data.description,
-          name: ` ${response.data.id}`,
+          name: `${response.data.id}`,
           status: true,
           is_running: false,
         },
       ]);
+      toast.current?.show({
+        severity: "success",
+        summary: "Thành công",
+        detail: "Máy in mới đã được thêm.",
+        life: 3000,
+      });
+      const printersResponse = await handleGetPrinter();
+        const formattedData = printersResponse.data.map((item: any) => ({
+            id: item.id,
+            name: `${item.id}`,
+            model: item.model,
+            brand: item.brand,
+            description: item.description,
+            status: item.status,
+            is_running: item.is_running,
+        }));
+
+        setPrinters(formattedData); // Cập nhật danh sách từ server
+        setShowAddPrinterDialog(false);
     } catch (error) {
-      console.error("Lỗi khi thêm máy in:", error);
-      alert("Thêm máy in thất bại!");
+      console.error("Lỗi thêm máy in:", error);
+      toast.current?.show({
+        severity: "error",
+        summary: "Lỗi",
+        detail: "Không thể thêm máy in.",
+        life: 3000,
+      });
     }
   };
 
@@ -268,17 +331,18 @@ const [selectedPrinterId, setSelectedPrinterId] = useState<number | null>(null);
             body={(rowData) => (rowData.is_running ? "Đang in" : "Không đang in")}
           />
           <Column
-            body={(rowData) => (
-              <Button
-                label={rowData.status ? "Vô hiệu hóa" : "Kích hoạt"}
-                icon={rowData.status ? "pi pi-times" : "pi pi-check"}
-                className={`p-button-${rowData.status ? "danger" : "success"}`}
-                onClick={() => updatePrinter(rowData.id)}
-                disabled={rowData.is_running === true}
-              />
-            )}
-            header="Vô hiệu hóa/Kích hoạt"
+              body={(rowData) => (
+                  <Button
+                      label={rowData.status ? "Vô hiệu hóa" : "Kích hoạt"}
+                      icon={rowData.status ? "pi pi-times" : "pi pi-check"}
+                      className={`p-button-${rowData.status ? "danger" : "success"}`}
+                      onClick={() => confirmUpdatePrinter(rowData.id)}
+                      disabled={rowData.is_running === true} 
+                  />
+              )}
+              header="Vô hiệu hóa/Kích hoạt"
           />
+
           <Column
             body={(rowData) => (
               <Button
@@ -391,6 +455,46 @@ const [selectedPrinterId, setSelectedPrinterId] = useState<number | null>(null);
           />
         </div>
       </Dialog>
+      <Dialog
+          header={<div style={{ textAlign: "center", fontWeight: "bold" }}>Xác nhận cập nhật</div>}
+          visible={showUpdateDialog}
+          style={{
+              width: "35vw",
+              borderRadius: "8px",
+              padding: "20px",
+              boxSizing: "border-box",
+          }}
+          modal
+          onHide={handleCancelUpdate}
+          className="confirmation-dialog"
+      >
+          <div style={{ textAlign: "center", padding: "20px 10px" }}>
+              <i
+                  className="pi pi-exclamation-triangle"
+                  style={{ fontSize: "2rem", color: "#FFC107", marginBottom: "15px" }}
+              ></i>
+              <p style={{ fontSize: "1.2rem", fontWeight: "500", color: "#333" }}>
+                  Cập nhật trạng thái máy in
+              </p>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "20px" }}>
+              <Button
+                  label="Hủy"
+                  icon="pi pi-times"
+                  className="p-button-secondary"
+                  onClick={handleCancelUpdate}
+                  style={{ marginRight: "10px", padding: "10px 20px" }}
+              />
+              <Button
+                  label="Đồng ý"
+                  icon="pi pi-check"
+                  className="p-button-success"
+                  onClick={handleConfirmUpdate}
+                  style={{ padding: "10px 20px" }}
+              />
+          </div>
+      </Dialog>
+
 
     </div>
   );
