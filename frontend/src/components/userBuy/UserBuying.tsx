@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
+import { Toast } from "primereact/toast";
 import Header from "../header/Header";
 import axios from "axios";
 
@@ -14,6 +15,8 @@ const UserBuying: React.FC = () => {
     document.title = "Mua giấy in";
     const [pageCount, setPageCount] = useState("");
     const [totalPrice, setTotalPrice] = useState<number | null>(null);
+
+    const toast = useRef<Toast>(null);
     const [systemConfig, setSystemConfig] = useState<SystemConfig | null>(null);
 
     useEffect(() => {
@@ -114,9 +117,19 @@ const UserBuying: React.FC = () => {
                                 Authorization: localStorage.getItem("authorization"),
                             },
                         }).then((res) => {
-                            alert("Mua hàng thành công");
+                            toast?.current?.show({
+                                severity: "success",
+                                summary: "Mua hàng thành công",
+                                detail: response.data.document.file_name,
+                                life: 5000,
+                            });
                         }).catch((err) => {
-                            alert("Mua hàng thất bại" + err);
+                            toast?.current?.show({
+                                severity: "error",
+                                summary: "Mua hàng thất bại",
+                                detail: error.response?.data?.detail || "Lỗi không xác định",
+                                life: 5000,
+                            });
                         })
                     }}
                     className="p-button-primary"
