@@ -24,6 +24,7 @@ type Log = {
 }
 
 export default function PrintingHistory() {
+    document.title = "Lịch sử in";
     const [logs, setLogs] = useState<Log[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);

@@ -9,6 +9,7 @@ import axios from "axios";
 import { Toast } from "primereact/toast";
 
 const UserPrinting: React.FC = () => {
+    document.title = "In tài liệu";
     const [preview, setPreview] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploadMessage, setUploadMessage] = useState<string>("");

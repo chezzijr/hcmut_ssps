@@ -20,4 +20,4 @@ class PrintJob(BaseModel):
     student_id: Optional[int] = None
 
     def count_num_pages(self):
-        return self.document.pages * self.copies if self.double_sided else ceil(self.document.pages * self.copies / 2)
+        return self.document.pages * self.copies if not self.double_sided else ceil(self.document.pages * self.copies / 2)

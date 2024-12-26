@@ -1,8 +1,8 @@
 dev: 
-	uv run fastapi dev main.py
+	uv run fastapi dev main.py || python -m fastapi dev main.py
 
 run:
-	uv run fastapi run main.py
+	uv run fastapi run main.py || python -m fastapi run main.py
 
 test:
-	uv run test.py
+	uv run test.py || python -m test

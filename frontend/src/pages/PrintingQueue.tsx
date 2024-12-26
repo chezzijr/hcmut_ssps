@@ -18,6 +18,7 @@ type PrintJob = {
 };
 
 export default function PrintingQueue() {
+    document.title = "Hàng đợi in";
     const [printjobs, setPrintjobs] = useState<PrintJob[]>([]);
 
     useEffect(() => {
